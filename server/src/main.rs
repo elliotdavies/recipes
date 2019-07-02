@@ -8,6 +8,9 @@ use rocket::Rocket;
 use rocket::fairing::AdHoc;
 use rocket_contrib::json::{Json, JsonValue};
 use rocket_contrib::databases::postgres;
+use rocket_cors;
+
+mod cors;
 
 #[database("recipes_db")]
 struct DBConn(postgres::Connection);
@@ -17,7 +20,7 @@ struct Message {
     message: String
 }
 
-#[post("/", format = "json", data = "<message>")]
+#[post("/",  data = "<message>")]
 fn receive_message(db: DBConn, message: Json<Message>) -> Json<JsonValue> {
     db.execute(
         "INSERT INTO recipes (message) VALUES ($1)",
@@ -39,14 +42,17 @@ fn set_up_db(rocket: Rocket) -> Result<Rocket, Rocket> {
     Ok(rocket)
 }
 
-fn rocket() -> rocket::Rocket {
+fn main() -> Result<(), rocket_cors::Error> {
+    println!("Launching...");
+
+    let cors = cors::cors()?;
+
     rocket::ignite()
         .attach(DBConn::fairing())
         .attach(AdHoc::on_attach("Set up database", set_up_db))
+        .attach(cors)
         .mount("/", routes![receive_message])
-}
+        .launch();
 
-fn main() {
-    println!("Launching...");
-    rocket().launch();
+    Ok(())
 }
