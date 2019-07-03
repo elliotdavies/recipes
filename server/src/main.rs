@@ -16,15 +16,34 @@ mod cors;
 struct DBConn(postgres::Connection);
 
 #[derive(Serialize, Deserialize)]
-struct Message {
-    message: String
+struct Submission {
+    text: String
 }
 
-#[post("/",  data = "<message>")]
-fn receive_message(db: DBConn, message: Json<Message>) -> Json<JsonValue> {
+#[derive(Serialize, Deserialize)]
+struct Recipe {
+    id: i32,
+    text: String
+}
+
+#[get("/")]
+fn get_recipes(db: DBConn) -> Json<JsonValue> {
+    let mut recipes: Vec<Recipe> = Vec::new();
+    for row in &db.query("SELECT * FROM recipes", &[]).unwrap() {
+        let id : i32 = row.get("id");
+        let text : String = row.get("text");
+        let recipe = Recipe { id, text };
+        recipes.push(recipe);
+    }
+
+    Json(json!(recipes))
+}
+
+#[post("/",  data = "<submission>")]
+fn add_recipe(db: DBConn, submission: Json<Submission>) -> Json<JsonValue> {
     db.execute(
-        "INSERT INTO recipes (message) VALUES ($1)",
-         &[&message.message]
+        "INSERT INTO recipes (text) VALUES ($1)",
+         &[&submission.text]
     ).unwrap();
 
     Json(json!({ "status": "ok" }))
@@ -34,8 +53,8 @@ fn set_up_db(rocket: Rocket) -> Result<Rocket, Rocket> {
     let db = DBConn::get_one(&rocket).expect("Database connection");
     db.execute(
         "CREATE TABLE IF NOT EXISTS recipes (
-            id      SERIAL PRIMARY KEY,
-            message VARCHAR NOT NULL
+            id   SERIAL PRIMARY KEY,
+            text VARCHAR NOT NULL
         )",
         &[]
     ).unwrap();
@@ -51,7 +70,7 @@ fn main() -> Result<(), rocket_cors::Error> {
         .attach(DBConn::fairing())
         .attach(AdHoc::on_attach("Set up database", set_up_db))
         .attach(cors)
-        .mount("/", routes![receive_message])
+        .mount("/", routes![get_recipes, add_recipe])
         .launch();
 
     Ok(())

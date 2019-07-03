@@ -1,23 +1,48 @@
 <script>
-	let result;
+  let state = {
+    recipes: [],
+    text: "",
+  };
 
-  fetch('http://localhost:8000', {
+  const url = "http://localhost:8000";
+
+  const get = () =>
+    fetch(url)
+      .then(res => res.json())
+      .then(recipes => {
+        state.recipes = recipes;
+      });
+
+  const post = text => fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'  
       },
-      body: JSON.stringify({ message: "svelte" })
+      body: JSON.stringify({ text })
     })
-    .then(res => res.json())
-    .then(({status}) => {
-      result = status;
-    });
+    .then(get);
 </script>
 
 <style>
-	h1 {
-		color: purple;
-	}
 </style>
 
-<h1>{result}</h1>
+<div>
+  <form on:submit|preventDefault>
+    <input type="text" bind:value={state.text} />
+    <button
+      type="button"
+      on:click={() => {
+        if (state.text.length) post(state.text);
+        state.text = "";
+      }}
+    >
+      Submit
+    </button>
+  </form>
+
+  <ul>
+  {#each state.recipes as recipe}
+    <li>{recipe.id}: {recipe.text}</li>
+  {/each}
+  </ul>
+</div>
