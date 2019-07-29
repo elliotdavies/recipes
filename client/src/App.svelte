@@ -1,48 +1,24 @@
 <script>
-  let state = {
-    recipes: [],
-    text: "",
-  };
+  import Header from "./Header.svelte";
+  import SubmitRecipe from "./SubmitRecipe.svelte";
+  import RecipeList from "./RecipeList.svelte";
 
-  const url = "http://localhost:8000";
-
-  const get = () =>
-    fetch(url)
-      .then(res => res.json())
-      .then(recipes => {
-        state.recipes = recipes;
-      });
-
-  const post = text => fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'  
-      },
-      body: JSON.stringify({ text })
-    })
-    .then(get);
+  const onSubmitRecipe = res => Promise.resolve();
 </script>
 
 <style>
+hr {
+  margin: 10px 0;
+}
 </style>
 
-<div>
-  <form on:submit|preventDefault>
-    <input type="text" bind:value={state.text} />
-    <button
-      type="button"
-      on:click={() => {
-        if (state.text.length) post(state.text);
-        state.text = "";
-      }}
-    >
-      Submit
-    </button>
-  </form>
+<svelte:head>
+  <link href="https://fonts.googleapis.com/css?family=Shadows+Into+Light&display=swap" rel="stylesheet">
+</svelte:head>
 
-  <ul>
-  {#each state.recipes as recipe}
-    <li>{recipe.id}: {recipe.text}</li>
-  {/each}
-  </ul>
-</div>
+<Header />
+<main>
+  <SubmitRecipe {onSubmitRecipe} />
+  <hr />
+  <RecipeList />
+</main>
