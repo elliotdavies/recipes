@@ -41,12 +41,20 @@ fn get_recipes(db: DBConn) -> Json<JsonValue> {
 
 #[post("/",  data = "<submission>")]
 fn add_recipe(db: DBConn, submission: Json<Submission>) -> Json<JsonValue> {
-    db.execute(
-        "INSERT INTO recipes (text) VALUES ($1)",
+    let mut result: Option<Recipe> = None;
+    for row in &db.query(
+        "INSERT INTO recipes (text) VALUES ($1) RETURNING id",
          &[&submission.text]
-    ).unwrap();
+    ).unwrap() {
+        let recipe = Recipe {
+            id: row.get("id"),
+            text: submission.text.clone()
+        };
 
-    Json(json!({ "status": "ok" }))
+        result = Some(recipe);
+    }
+
+    Json(json!(result))
 }
 
 fn set_up_db(rocket: Rocket) -> Result<Rocket, Rocket> {

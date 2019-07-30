@@ -2,8 +2,6 @@
   import Header from "./Header.svelte";
   import SubmitRecipe from "./SubmitRecipe.svelte";
   import RecipeList from "./RecipeList.svelte";
-
-  const onSubmitRecipe = res => Promise.resolve();
 </script>
 
 <style>
@@ -18,7 +16,7 @@ hr {
 
 <Header />
 <main>
-  <SubmitRecipe {onSubmitRecipe} />
+  <SubmitRecipe />
   <hr />
   <RecipeList />
 </main>

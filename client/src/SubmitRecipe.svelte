@@ -1,7 +1,6 @@
 <script>
-  export let onSubmitRecipe;
-
   import { submitRecipe } from "./api";
+  import { recipes } from "./store";
 
   let state = {
     text: "",
@@ -16,18 +15,19 @@
     state.text = "";
     
     submitRecipe(text)
-    .then(res => {
-      state.request = {
-        status: "success"
-      };
-      return onSubmitRecipe(res);
-    })
-    .catch(error => {
-      state.request = {
-        status: "failure",
-        error
-      };
-    });
+      .then(res => res.json())
+      .then(recipe => {
+        state.request = {
+          status: "success"
+        };
+        recipes.update(rs => [...rs, recipe])
+      })
+      .catch(error => {
+        state.request = {
+          status: "failure",
+          error
+        };
+      });
   };
 </script>
 
