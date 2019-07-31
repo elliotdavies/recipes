@@ -11,6 +11,9 @@
     state.recipes = rs;
   });
 
+  const sortRecipes = rs =>
+    rs.sort((a,b) => b.id - a.id)
+
   getRecipes()
     .then(rs => {
       recipes.set(rs);
@@ -33,7 +36,7 @@ ul {
   <h2>Recently added recipes</h2>
 
   <ul>
-  {#each state.recipes.sort((a,b) => b.id - a.id) as recipe}
+  {#each sortRecipes(state.recipes) as recipe}
     <li><RecipeSummary {recipe} /></li>
   {:else}
     <span>No recipes yet...</span>

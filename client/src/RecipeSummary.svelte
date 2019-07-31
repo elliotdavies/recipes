@@ -1,5 +1,8 @@
 <script>
   export let recipe;
+
+  const toFullUrl = url =>
+    url.startsWith('http') ? url : 'http://' + url;
 </script>
 
 <style>
@@ -16,6 +19,8 @@ p {
 </style>
 
 <div class="recipe">
-  <p>ID: {recipe.id}</p>
-  <p>Text: {recipe.text}</p>
+  <a href={toFullUrl(recipe.url)} target="_blank">
+    <p>ID: {recipe.id}</p>
+    <p>URL: {recipe.url}</p>
+  </a>
 </div>

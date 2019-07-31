@@ -17,13 +17,13 @@ struct DBConn(postgres::Connection);
 
 #[derive(Serialize, Deserialize)]
 struct Submission {
-    text: String
+    url: String
 }
 
 #[derive(Serialize, Deserialize)]
 struct Recipe {
     id: i32,
-    text: String
+    url: String
 }
 
 #[get("/")]
@@ -31,8 +31,8 @@ fn get_recipes(db: DBConn) -> Json<JsonValue> {
     let mut recipes: Vec<Recipe> = Vec::new();
     for row in &db.query("SELECT * FROM recipes", &[]).unwrap() {
         let id : i32 = row.get("id");
-        let text : String = row.get("text");
-        let recipe = Recipe { id, text };
+        let url : String = row.get("url");
+        let recipe = Recipe { id, url };
         recipes.push(recipe);
     }
 
@@ -43,12 +43,12 @@ fn get_recipes(db: DBConn) -> Json<JsonValue> {
 fn add_recipe(db: DBConn, submission: Json<Submission>) -> Json<JsonValue> {
     let mut result: Option<Recipe> = None;
     for row in &db.query(
-        "INSERT INTO recipes (text) VALUES ($1) RETURNING id",
-         &[&submission.text]
+        "INSERT INTO recipes (url) VALUES ($1) RETURNING id",
+         &[&submission.url]
     ).unwrap() {
         let recipe = Recipe {
             id: row.get("id"),
-            text: submission.text.clone()
+            url: submission.url.clone()
         };
 
         result = Some(recipe);
@@ -61,8 +61,8 @@ fn set_up_db(rocket: Rocket) -> Result<Rocket, Rocket> {
     let db = DBConn::get_one(&rocket).expect("Database connection");
     db.execute(
         "CREATE TABLE IF NOT EXISTS recipes (
-            id   SERIAL PRIMARY KEY,
-            text VARCHAR NOT NULL
+            id  SERIAL PRIMARY KEY,
+            url VARCHAR NOT NULL
         )",
         &[]
     ).unwrap();

@@ -3,18 +3,20 @@
   import { recipes } from "./store";
 
   let state = {
-    text: "",
+    url: "",
     request: {
       status: "notAsked"
     }
   };
 
-  const onSubmit = () => {
-    const text = state.text;
-    if (!text.length) return;
-    state.text = "";
+  const onSubmit = e => {
+    e.preventDefault();
+
+    const url = state.url;
+    if (!url.length) return;
+    state.url = "";
     
-    submitRecipe(text)
+    submitRecipe(url)
       .then(res => res.json())
       .then(recipe => {
         state.request = {
@@ -65,13 +67,13 @@ div.request-status {
 
 <section>
   <h2>Save new recipe</h2>
-  <form on:submit|preventDefault>
+  <form on:submit={onSubmit}>
     <label>
       <span>URL:</span>
-      <input type="text" bind:value={state.text} />
+      <input type="url" bind:value={state.url} />
     </label>
 
-    <button type="button" on:click={onSubmit}>
+    <button type="submit">
       Submit
     </button>
 

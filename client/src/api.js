@@ -1,12 +1,12 @@
-const url = "http://localhost:8000";
+const apiUrl = "http://localhost:8000";
 
-export const getRecipes = () => fetch(url).then(res => res.json());
+export const getRecipes = () => fetch(apiUrl).then(res => res.json());
 
-export const submitRecipe = text =>
-  fetch(url, {
+export const submitRecipe = url =>
+  fetch(apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ text })
+    body: JSON.stringify({ url })
   });
