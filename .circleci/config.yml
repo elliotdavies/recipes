@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build-server:
     docker:
-      - image: rust:nightly
+      - image: rustlang/rust:nightly
     steps:
       - checkout
       - run:
