@@ -12,11 +12,8 @@ jobs:
           name: Version information
           command: rustc --version; cargo --version; rustup --version
       - run:
-          name: Change directory
-          command: cd server
-      - run:
           name: Build
-          command: cargo build
+          command: cd server; cargo build
 
   build-client:
     docker:
@@ -27,14 +24,11 @@ jobs:
           name: Version information
           command: node --version; yarn --version
       - run:
-          name: Change directory
-          command: cd client
-      - run:
           name: Install dependencies
-          command: yarn
+          command: cd client; yarn
       - run:
           name: Build
-          command: yarn build
+          command: cd client; yarn build
 
 
 workflows:
