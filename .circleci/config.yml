@@ -13,7 +13,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - run:
           name: Build
-          command: cargo build
+          command: cd server; cargo build
 
 workflows:
   build-deploy:
