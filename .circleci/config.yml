@@ -24,13 +24,13 @@ jobs:
       - image: rustlang/rust:nightly
     steps:
       - attach_workspace:
-          at: /tmp/recipes
+          at: /tmp/recipes-server
       - run:
-          name: Package
-          command: tar -cfz release.tar.gz /tmp/recipes/target/release
+          name: Show workspace
+          command: ls /tmp/recipes-server
       - run:
-          name: Copy
-          command: scp release.tar.gz ec2-user@ec2-35-177-170-145.eu-west-2.compute.amazonaws.com:/home/ec2-user
+          name: Deploy
+          command: tar -czf release.tar.gz /tmp/recipes-server/target/release; scp release.tar.gz ec2-user@ec2-35-177-170-145.eu-west-2.compute.amazonaws.com:/home/ec2-user
 
   build-client:
     docker:
