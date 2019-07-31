@@ -3,6 +3,7 @@ jobs:
   build-server:
     docker:
       - image: rustlang/rust:nightly
+    working_directory: server
     steps:
       - checkout
       - run:
@@ -13,12 +14,30 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - run:
           name: Build
-          command: cd server; cargo build
+          command: cargo build
+
+  build-client:
+    docker:
+      - image: node:lts
+    working_directory: client
+    steps:
+      - checkout
+      - run:
+          name: Version information
+          command: node --version; yarn --version
+      - run:
+          name: Install dependencies
+          command: yarn
+      - run:
+          name: Build
+          command: yarn build
+
 
 workflows:
   build-deploy:
     jobs:
       - build-server
+      - build-client
         # - deploy-server:
         # requires:
         # - build-server
