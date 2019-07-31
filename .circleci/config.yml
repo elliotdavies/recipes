@@ -52,9 +52,9 @@ workflows:
     jobs:
       - build-server
       - build-client
-        # - deploy-server:
-        # requires:
-        # - build-server
-        # filters:
-        # branches:
-        # only: master
+      - deploy-server:
+          requires:
+            - build-server
+          filters:
+            branches:
+              only: master
