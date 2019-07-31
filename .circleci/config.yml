@@ -1,0 +1,27 @@
+version: 2.1
+jobs:
+  build-server:
+    docker:
+      - image: rust:nightly
+    steps:
+      - checkout
+      - run:
+          name: Rustup
+          command: rustup toolchain install nightly; rustup default nightly
+      - run:
+          name: Version information
+          command: rustc --version; cargo --version; rustup --version
+      - run:
+          name: Build
+          command: cargo build
+
+workflows:
+  build-deploy:
+    jobs:
+      - build-server
+        # - deploy-server:
+        # requires:
+        # - build-server
+        # filters:
+        # branches:
+        # only: master
