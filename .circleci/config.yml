@@ -1,61 +1,58 @@
 version: 2.1
-jobs:
-  build-server:
-    docker:
-      - image: rustlang/rust:nightly
-    steps:
-      - checkout
-      - run:
-          name: Rustup
-          command: rustup toolchain install nightly; rustup default nightly; rustup target add x86_64-unknown-linux-musl
-      - run:
-          name: Version information
-          command: rustc --version; cargo --version; rustup --version
-      - run:
-          name: Build
-          command: cd server; cargo build --target x86_64-unknown-linux-musl --release
-      - persist_to_workspace:
-          root: server
-          paths:
-            - target
-
-  deploy-server:
-    docker:
-      - image: circleci/python:2.7-jessie
-    steps:
-      - attach_workspace:
-          at: /tmp/recipes-server
-      - run:
-          name: Install awscli
-          command: sudo pip install awscli
-      - run:
-          name: Deploy to S3
-          command: aws s3 sync /tmp/recipes-server/ s3://recipes.elliotdavies.co.uk/ --delete
-          # command: tar -czf release.tar.gz /tmp/recipes-server/target/release; scp release.tar.gz ec2-user@ec2-35-177-170-145.eu-west-2.compute.amazonaws.com:/home/ec2-user
-
-  build-client:
-    docker:
-      - image: node:lts
-    steps:
-      - checkout
-      - run:
-          name: Version information
-          command: node --version; yarn --version
-      - run:
-          name: Install dependencies
-          command: cd client; yarn
-      - run:
-          name: Build
-          command: cd client; yarn build
-
+orbs:
+  aws-ecr: circleci/aws-ecr@6.2.0
+  # jobs:
+  # build-server:
+  # docker:
+  # - machine: ubuntu-1604:201903-01
+  # steps:
+  # - checkout
+  # - run:
+  # name: Build Dockerfile
+  # command: |
+  # cd server
+  # docker build -t recipes-server .
+  # - run:
+  # name: Push to ECR
+  # command: |
+  # $(aws ecr get-login --no-include-email)
+  # docker tag recipes-server 744937614989.dkr.ecr.eu-west-2.amazonaws.com/recipes
+  # docker push 744937614989.dkr.ecr.eu-west-2.amazonaws.com/recipes
+  # 
+  # build-client:
+  # docker:
+  # - image: node:lts
+  # steps:
+  # - checkout
+  # - run:
+  # name: Version information
+  # command: node --version; yarn --version
+  # - run:
+  # name: Install dependencies
+  # command: cd client; yarn
+  # - run:
+  # name: Build
+  # command: cd client; yarn build
+  # 
 workflows:
   build-deploy:
     jobs:
-      - build-server
-      - build-client
-      - deploy-server:
-          requires:
-            - build-server
-          filters:
-            branches:
-              only: master
+      - aws-ecr/build-and-push-image:
+          account-url: 744937614989.dkr.ecr.eu-west-2.amazonaws.com
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          checkout: true
+          create-repo: false
+          path: server
+          region: eu-west-2
+          repo: recipes
+          tag: recipes-server:latest
+
+      # - build-client
+
+        # - deploy-server:
+        # requires:
+        # - build-server
+        # filters:
+        # branches:
+        # only: master
