@@ -38,13 +38,13 @@ workflows:
   build-deploy:
     jobs:
       - aws-ecr/build-and-push-image:
-          account-url: 744937614989.dkr.ecr.eu-west-2.amazonaws.com
+          account-url: AWS_ECR_ACCOUNT_URL
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           checkout: true
           create-repo: false
           path: server
-          region: eu-west-2
+          region: AWS_REGION
           repo: recipes
           tag: recipes-server:latest
 
