@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           name: Rustup
-          command: rustup toolchain install nightly; rustup default nightly
+          command: rustup toolchain install nightly; rustup default nightly; rustup target add x86_64-unknown-linux-musl
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version
