@@ -21,16 +21,17 @@ jobs:
 
   deploy-server:
     docker:
-      - image: rustlang/rust:nightly
+      - image: circleci/python:2.7-jessie
     steps:
       - attach_workspace:
           at: /tmp/recipes-server
       - run:
-          name: Show workspace
-          command: ls /tmp/recipes-server
+          name: Install awscli
+          command: sudo pip install awscli
       - run:
-          name: Deploy
-          command: tar -czf release.tar.gz /tmp/recipes-server/target/release; scp release.tar.gz ec2-user@ec2-35-177-170-145.eu-west-2.compute.amazonaws.com:/home/ec2-user
+          name: Deploy to S3
+          command: aws s3 sync /tmp/recipes-server/ s3://recipes.elliotdavies.co.uk/ --delete
+          # command: tar -czf release.tar.gz /tmp/recipes-server/target/release; scp release.tar.gz ec2-user@ec2-35-177-170-145.eu-west-2.compute.amazonaws.com:/home/ec2-user
 
   build-client:
     docker:
