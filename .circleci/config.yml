@@ -43,7 +43,7 @@ workflows:
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           checkout: true
           create-repo: true
-          path: server
+          workspace-root: server
           region: AWS_REGION
           repo: recipes-server
 
