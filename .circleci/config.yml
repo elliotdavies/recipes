@@ -2,23 +2,6 @@ version: 2.1
 orbs:
   aws-ecr: circleci/aws-ecr@6.2.0
   # jobs:
-  # build-server:
-  # docker:
-  # - machine: ubuntu-1604:201903-01
-  # steps:
-  # - checkout
-  # - run:
-  # name: Build Dockerfile
-  # command: |
-  # cd server
-  # docker build -t recipes-server .
-  # - run:
-  # name: Push to ECR
-  # command: |
-  # $(aws ecr get-login --no-include-email)
-  # docker tag recipes-server 744937614989.dkr.ecr.eu-west-2.amazonaws.com/recipes
-  # docker push 744937614989.dkr.ecr.eu-west-2.amazonaws.com/recipes
-  # 
   # build-client:
   # docker:
   # - image: node:lts
@@ -34,6 +17,7 @@ orbs:
   # name: Build
   # command: cd client; yarn build
   # 
+
 workflows:
   build-deploy:
     jobs:
@@ -47,6 +31,7 @@ workflows:
           path: server
           region: AWS_REGION
           repo: recipes-server
+          tag: ${CIRCLE_SHA1}
 
       # - build-client
 
