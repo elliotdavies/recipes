@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   aws-ecr: circleci/aws-ecr@6.2.0
+  aws-ecs: circleci/aws-ecs@0.0.11
   # jobs:
   # build-client:
   # docker:
@@ -32,6 +33,14 @@ workflows:
           region: AWS_REGION
           repo: recipes-server
           tag: ${CIRCLE_SHA1}
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build_and_push_image
+          region: AWS_REGION
+          family: 'recipes-service'
+          cluster-name: 'recipes'
+          container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
+
 
       # - build-client
 
