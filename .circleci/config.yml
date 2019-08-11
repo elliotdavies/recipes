@@ -4,32 +4,28 @@ orbs:
   aws-ecr: circleci/aws-ecr@6.2.0
   aws-ecs: circleci/aws-ecs@0.0.11
 
-jobs:
-  aws-ecr/build-and-push-image:
-    account-url: AWS_ECR_ACCOUNT_URL
-    aws-access-key-id: AWS_ACCESS_KEY_ID
-    aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-    checkout: true
-    create-repo: true
-    dockerfile: server/Dockerfile
-    path: server
-    region: AWS_REGION
-    repo: recipes-server
-    tag: ${CIRCLE_SHA1}
-
-  aws-ecs/deploy-service-update:
-    family: 'recipes-task-definition'
-    cluster-name: 'recipes'
-    service-name: 'recipes-service'
-    container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
-
 workflows:
   build-deploy:
     jobs:
-      - aws-ecr/build-and-push-image
-      - deploy-server:
+      - aws-ecr/build-and-push-image:
+          account-url: AWS_ECR_ACCOUNT_URL
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          checkout: true
+          create-repo: true
+          dockerfile: server/Dockerfile
+          path: server
+          region: AWS_REGION
+          repo: recipes-server
+          tag: ${CIRCLE_SHA1}
+
+      - aws-ecs/deploy-service-update:
           requires:
-            - aws-ecs/deploy-service-update
+            - aws-ecr/build-and-push-image
           filters:
             branches:
               only: master
+          family: 'recipes-task-definition'
+          cluster-name: 'recipes'
+          service-name: 'recipes-service'
+          container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
