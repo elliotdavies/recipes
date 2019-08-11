@@ -36,7 +36,6 @@ workflows:
       - aws-ecs/deploy-service-update:
           requires:
             - aws-ecr/build-and-push-image
-          region: AWS_REGION
           family: 'recipes-service'
           cluster-name: 'recipes'
           container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
