@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS recipes (
+    id  SERIAL PRIMARY KEY,
+    url VARCHAR NOT NULL
+)
