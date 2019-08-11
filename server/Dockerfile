@@ -3,9 +3,9 @@ FROM rustlang/rust:nightly as build
 
 COPY ./ ./
 
-RUN rustup toolchain install nightly-2018-08-09
+RUN rustup toolchain install nightly-2019-08-09
 
-RUN rustup default nightly-2018-08-09
+RUN rustup default nightly-2019-08-09
 
 RUN rustup target add x86_64-unknown-linux-musl
 
