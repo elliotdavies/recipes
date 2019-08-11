@@ -1,52 +1,48 @@
 version: 2.1
+
+executors:
+  orb-executor:
+    docker:
+      - image: circleci/python:3.7.1
+
 orbs:
   aws-ecr: circleci/aws-ecr@6.2.0
   aws-ecs: circleci/aws-ecs@0.0.11
-  # jobs:
-  # build-client:
-  # docker:
-  # - image: node:lts
-  # steps:
-  # - checkout
-  # - run:
-  # name: Version information
-  # command: node --version; yarn --version
-  # - run:
-  # name: Install dependencies
-  # command: cd client; yarn
-  # - run:
-  # name: Build
-  # command: cd client; yarn build
-  # 
+
+jobs:
+  - build-server:
+      executor: orb-executor
+      steps:
+        - aws-ecr/build-and-push-image:
+            account-url: AWS_ECR_ACCOUNT_URL
+            aws-access-key-id: AWS_ACCESS_KEY_ID
+            aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+            checkout: true
+            create-repo: true
+            dockerfile: server/Dockerfile
+            path: server
+            region: AWS_REGION
+            repo: recipes-server
+            tag: ${CIRCLE_SHA1}
+
+  - deploy-server:
+      executor: orb-executor
+      steps:
+        - aws-ecs/deploy-service-update:
+            requires:
+              - aws-ecr/build-and-push-image
+            family: 'recipes-task-definition'
+            cluster-name: 'recipes'
+            service-name: 'recipes-service'
+            container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
 
 workflows:
   build-deploy:
     jobs:
-      - aws-ecr/build-and-push-image:
-          account-url: AWS_ECR_ACCOUNT_URL
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          checkout: true
-          create-repo: true
-          dockerfile: server/Dockerfile
-          path: server
-          region: AWS_REGION
-          repo: recipes-server
-          tag: ${CIRCLE_SHA1}
-      - aws-ecs/deploy-service-update:
+      - build-server
+      - deploy-server:
           requires:
-            - aws-ecr/build-and-push-image
-          family: 'recipes-task-definition'
-          cluster-name: 'recipes'
-          service-name: 'recipes-service'
-          container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
-
-
-      # - build-client
-
-        # - deploy-server:
-        # requires:
-        # - build-server
-        # filters:
-        # branches:
-        # only: master
+            - build-server
+          filters:
+            branches:
+              only: master
