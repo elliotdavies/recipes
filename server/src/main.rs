@@ -4,8 +4,6 @@
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
 
-use rocket::Rocket;
-use rocket::fairing::AdHoc;
 use rocket_contrib::json::{Json, JsonValue};
 use rocket_contrib::databases::postgres;
 use rocket_cors;
@@ -57,18 +55,6 @@ fn add_recipe(db: DBConn, submission: Json<Submission>) -> Json<JsonValue> {
     Json(json!(result))
 }
 
-fn set_up_db(rocket: Rocket) -> Result<Rocket, Rocket> {
-    let db = DBConn::get_one(&rocket).expect("Database connection");
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS recipes (
-            id  SERIAL PRIMARY KEY,
-            url VARCHAR NOT NULL
-        )",
-        &[]
-    ).unwrap();
-    Ok(rocket)
-}
-
 fn main() -> Result<(), rocket_cors::Error> {
     println!("Launching...");
 
@@ -76,7 +62,6 @@ fn main() -> Result<(), rocket_cors::Error> {
 
     rocket::ignite()
         .attach(DBConn::fairing())
-        .attach(AdHoc::on_attach("Set up database", set_up_db))
         .attach(cors)
         .mount("/", routes![get_recipes, add_recipe])
         .launch();
