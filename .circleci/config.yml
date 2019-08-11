@@ -6,7 +6,6 @@ orbs:
 
 jobs:
   aws-ecr/build-and-push-image:
-    name: build-server
     account-url: AWS_ECR_ACCOUNT_URL
     aws-access-key-id: AWS_ACCESS_KEY_ID
     aws-secret-access-key: AWS_SECRET_ACCESS_KEY
@@ -19,7 +18,6 @@ jobs:
     tag: ${CIRCLE_SHA1}
 
   aws-ecs/deploy-service-update:
-    name: deploy-server
     family: 'recipes-task-definition'
     cluster-name: 'recipes'
     service-name: 'recipes-service'
@@ -28,10 +26,10 @@ jobs:
 workflows:
   build-deploy:
     jobs:
-      - build-server
+      - aws-ecr/build-and-push-image
       - deploy-server:
           requires:
-            - build-server
+            - aws-ecs/deploy-service-update
           filters:
             branches:
               only: master
