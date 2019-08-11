@@ -29,8 +29,6 @@ jobs:
     executor: orb-executor
     steps:
       - aws-ecs/deploy-service-update:
-          requires:
-            - aws-ecr/build-and-push-image
           family: 'recipes-task-definition'
           cluster-name: 'recipes'
           service-name: 'recipes-service'
