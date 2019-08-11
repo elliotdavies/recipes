@@ -22,22 +22,23 @@ orbs:
 workflows:
   build-deploy:
     jobs:
-      - aws-ecr/build-and-push-image:
-          account-url: AWS_ECR_ACCOUNT_URL
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          checkout: true
-          create-repo: true
-          dockerfile: server/Dockerfile
-          path: server
-          region: AWS_REGION
-          repo: recipes-server
-          tag: ${CIRCLE_SHA1}
+      # - aws-ecr/build-and-push-image:
+      # account-url: AWS_ECR_ACCOUNT_URL
+      # aws-access-key-id: AWS_ACCESS_KEY_ID
+      # aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+      # checkout: true
+      # create-repo: true
+      # dockerfile: server/Dockerfile
+      # path: server
+      # region: AWS_REGION
+      # repo: recipes-server
+      # tag: ${CIRCLE_SHA1}
       - aws-ecs/deploy-service-update:
-          requires:
-            - aws-ecr/build-and-push-image
-          family: 'recipes-service'
+          # requires:
+            # - aws-ecr/build-and-push-image
+          family: 'recipes-task-definition'
           cluster-name: 'recipes'
+          service-name: 'recipes-service'
           container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
 
 
