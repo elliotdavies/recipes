@@ -10,7 +10,7 @@ use rocket_cors;
 
 mod cors;
 
-#[database("recipes_db")]
+#[database("recipes")]
 struct DBConn(postgres::Connection);
 
 #[derive(Serialize, Deserialize)]

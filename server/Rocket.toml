@@ -1,2 +1,0 @@
-[global.databases.recipes_db]
-url = "postgres://recipes:password123@localhost:5432/recipes"
