@@ -8,6 +8,7 @@ workflows:
   build-deploy:
     jobs:
       - aws-ecr/build-and-push-image:
+          name: build-server
           account-url: AWS_ECR_ACCOUNT_URL
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
@@ -19,9 +20,22 @@ workflows:
           repo: recipes-server
           tag: ${CIRCLE_SHA1}
 
+      - aws-ecr/build-and-push-image:
+          name: build-client
+          account-url: AWS_ECR_ACCOUNT_URL
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          checkout: true
+          create-repo: true
+          dockerfile: client/Dockerfile
+          path: client
+          region: AWS_REGION
+          repo: recipes-client
+          tag: ${CIRCLE_SHA1}
+
       - aws-ecs/deploy-service-update:
           requires:
-            - aws-ecr/build-and-push-image
+            - build-server
           filters:
             branches:
               only: master
@@ -29,3 +43,14 @@ workflows:
           cluster-name: 'recipes'
           service-name: 'recipes-service'
           container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
+
+      - aws-ecs/deploy-service-update:
+          requires:
+            - build-client
+          filters:
+            branches:
+              only: master
+          family: 'recipes-task-definition'
+          cluster-name: 'recipes'
+          service-name: 'recipes-service'
+          container-image-name-updates: 'container=recipes-client,tag=${CIRCLE_SHA1}'
