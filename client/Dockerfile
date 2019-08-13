@@ -1,9 +1,10 @@
+# Build
 FROM node:lts
 
 COPY ./ ./
 
-RUN yarn
+RUN yarn && yarn build
 
-RUN yarn build
 
-RUN yarn serve-prod
+# Run
+CMD yarn serve-prod
