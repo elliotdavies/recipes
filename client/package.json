@@ -21,6 +21,6 @@
     "build": "webpack --config webpack.config.prod.js --progress",
     "watch": "webpack-dev-server --config webpack.config.dev.js --progress",
     "serve-prod": "yarn inject-html && cd dist && ws -p 80",
-    "inject-html": "sed -i '' \"s/%%API_URL%%/$API_URL/\" dist/index.html"
+    "inject-html": "perl -pi -e 's/%%API_URL%%/$ENV{API_URL}/g' dist/index.html"
   }
 }
