@@ -1,4 +1,4 @@
-const apiUrl = "http://localhost:8000";
+const { apiUrl } = window.recipesConfig;
 
 export const getRecipes = () => fetch(apiUrl).then(res => res.json());
 
