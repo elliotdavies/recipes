@@ -5,6 +5,5 @@ COPY ./ ./
 
 RUN yarn && yarn build
 
-
 # Run
 CMD yarn serve-prod
