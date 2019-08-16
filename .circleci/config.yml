@@ -39,9 +39,9 @@ workflows:
           filters:
             branches:
               only: master
-          family: 'recipes-task-definition'
+          family: 'recipes-server' # Task definition
           cluster-name: 'recipes'
-          service-name: 'recipes-service-2'
+          service-name: 'recipes-server'
           container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
 
       - aws-ecs/deploy-service-update:
@@ -50,7 +50,7 @@ workflows:
           filters:
             branches:
               only: master
-          family: 'recipes-task-definition'
+          family: 'recipes-client' # Task definition
           cluster-name: 'recipes'
-          service-name: 'recipes-service-2'
+          service-name: 'recipes-client'
           container-image-name-updates: 'container=recipes-client,tag=${CIRCLE_SHA1}'
