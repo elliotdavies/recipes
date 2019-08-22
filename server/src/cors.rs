@@ -6,7 +6,7 @@ use rocket::http::Method;
 use rocket_cors::{AllowedHeaders, AllowedOrigins, Cors, Error};
 
 pub fn cors() -> Result<Cors, Error> {
-    let allowed_origins = AllowedOrigins::some_exact(&["http://localhost:5000", "http://recipes.elliotdavies.co.uk"]);
+    let allowed_origins = AllowedOrigins::all();
 
     rocket_cors::CorsOptions {
         allowed_origins,
