@@ -1,4 +1,5 @@
 <script>
+  import { link } from 'svelte-routing';
 </script>
 
 <style>
@@ -15,8 +16,15 @@ h1 {
   font-family: 'Shadows Into Light', cursive;
   font-weight: normal;
 }
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
 </style>
 
 <header>
-<h1>Recipes 📚</h1>
+  <h1>
+    <a href="/" use:link>Recipes 📚</a>
+  </h1>
 </header>

@@ -1,6 +1,7 @@
 <script>
   import { getRecipes } from "./api";
   import { recipes } from "./store";
+
   import RecipeSummary from "./RecipeSummary.svelte";
 
   let state = {
@@ -21,6 +22,10 @@
 </script>
 
 <style>
+hr {
+  margin: 10px 0;
+}
+
 h2 {
   font-weight: normal;
   font-size: 20px;
@@ -32,6 +37,7 @@ ul {
 }
 </style>
 
+<hr />
 <section>
   <h2>Recently added recipes</h2>
 

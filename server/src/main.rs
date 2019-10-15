@@ -15,13 +15,15 @@ struct DBConn(postgres::Connection);
 
 #[derive(Serialize, Deserialize)]
 struct Submission {
-    url: String
+    url: String,
+    notes: String
 }
 
 #[derive(Serialize, Deserialize)]
 struct Recipe {
     id: i32,
-    url: String
+    url: String,
+    notes: String
 }
 
 #[get("/")]
@@ -30,7 +32,8 @@ fn get_recipes(db: DBConn) -> Json<JsonValue> {
     for row in &db.query("SELECT * FROM recipes", &[]).unwrap() {
         let id : i32 = row.get("id");
         let url : String = row.get("url");
-        let recipe = Recipe { id, url };
+        let notes : String = row.get("notes");
+        let recipe = Recipe { id, url, notes };
         recipes.push(recipe);
     }
 
@@ -41,12 +44,13 @@ fn get_recipes(db: DBConn) -> Json<JsonValue> {
 fn add_recipe(db: DBConn, submission: Json<Submission>) -> Json<JsonValue> {
     let mut result: Option<Recipe> = None;
     for row in &db.query(
-        "INSERT INTO recipes (url) VALUES ($1) RETURNING id",
-         &[&submission.url]
+        "INSERT INTO recipes (url, notes) VALUES ($1, $2) RETURNING id",
+         &[&submission.url, &submission.notes]
     ).unwrap() {
         let recipe = Recipe {
             id: row.get("id"),
-            url: submission.url.clone()
+            url: submission.url.clone(),
+            notes: submission.notes.clone()
         };
 
         result = Some(recipe);

@@ -1,8 +1,9 @@
 <script>
-  export let recipe;
+  import { link } from 'svelte-routing';
 
-  const toFullUrl = url =>
-    url.startsWith('http') ? url : 'http://' + url;
+  import { toFullUrl } from './utils';
+
+  export let recipe;
 </script>
 
 <style>
@@ -14,13 +15,35 @@
 }
 
 p {
+  margin-top: 0;
+}
+
+ul {
   margin: 0;
+  padding: 0;
+  list-style-position: inside;
+}
+
+li a {
+  display: inline-block;
+  padding: 10px 0;
 }
 </style>
 
 <div class="recipe">
-  <a href={toFullUrl(recipe.url)} target="_blank">
-    <p>ID: {recipe.id}</p>
-    <p>URL: {recipe.url}</p>
-  </a>
+  <p>URL: {recipe.url}</p>
+
+  <ul>
+    <li>
+      <a href={toFullUrl(recipe.url)} target="_blank">
+        Go to recipe URL
+      </a>
+    </li>
+
+    <li>
+      <a href={`/recipe/${recipe.id}`} use:link>
+        View full recipe
+      </a>
+    </li>
+  </ul>
 </div>

@@ -4,6 +4,7 @@
 
   let state = {
     url: "",
+    notes: "",
     request: {
       status: "notAsked"
     }
@@ -16,7 +17,7 @@
     if (!url.length) return;
     state.url = "";
     
-    submitRecipe(url)
+    submitRecipe(url, state.notes)
       .then(res => res.json())
       .then(recipe => {
         state.request = {
@@ -51,7 +52,7 @@ span {
   margin-right: 5px;
 }
 
-input {
+input, textarea {
   width: 100%;
   margin: 0;
 }
@@ -71,6 +72,11 @@ div.request-status {
     <label>
       <span>URL:</span>
       <input type="url" bind:value={state.url} />
+    </label>
+
+    <label>
+      <span>Notes:</span>
+      <textarea bind:value={state.notes}></textarea>
     </label>
 
     <button type="submit">

@@ -30,7 +30,7 @@ module.exports = {
     rules: [
       {
         test: /\.(html|svelte)$/,
-        exclude: [/node_modules/, /index.html/],
+        exclude: [/index.html/],
         use: {
           loader: "svelte-loader",
           options: {

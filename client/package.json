@@ -22,5 +22,8 @@
     "watch": "webpack-dev-server --config webpack.config.dev.js --progress",
     "serve-prod": "yarn inject-html && cd dist && ws -p 80",
     "inject-html": "perl -pi -e 's/%%API_URL%%/$ENV{API_URL}/g' dist/index.html"
+  },
+  "dependencies": {
+    "svelte-routing": "^1.4.0"
   }
 }
