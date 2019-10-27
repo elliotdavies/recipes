@@ -20,6 +20,8 @@
     submitRecipe(url, state.notes)
       .then(res => res.json())
       .then(recipe => {
+        state.url = ""
+        state.notes = ""
         state.request = {
           status: "success"
         };
