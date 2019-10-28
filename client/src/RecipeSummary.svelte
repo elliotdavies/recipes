@@ -35,7 +35,7 @@ li a {
 
   <ul>
     <li>
-      <a href={toFullUrl(recipe.url)} target="_blank">
+      <a href={toFullUrl(recipe.url)} target="_blank" rel="noopener">
         Go to recipe URL
       </a>
     </li>

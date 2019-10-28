@@ -39,7 +39,7 @@ h1 > small {
     <small>{state.recipe.url}</small>
   </h1>
 
-  <a href={toFullUrl(state.recipe.url)} target="_blank">
+  <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
     <p>Go to recipe</p>
   </a>
 
