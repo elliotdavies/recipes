@@ -10,7 +10,7 @@ pub fn cors() -> Result<Cors, Error> {
 
     rocket_cors::CorsOptions {
         allowed_origins,
-        allowed_methods: vec![Method::Get, Method::Post].into_iter().map(From::from).collect(),
+        allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Delete].into_iter().map(From::from).collect(),
         allowed_headers: AllowedHeaders::some(&["Authorization", "Accept", "Content-Type"]),
         allow_credentials: true,
         ..Default::default()

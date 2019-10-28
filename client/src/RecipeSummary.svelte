@@ -16,6 +16,7 @@
 
 p {
   margin-top: 0;
+  word-wrap: break-word;
 }
 
 ul {
@@ -31,7 +32,7 @@ li a {
 </style>
 
 <div class="recipe">
-  <p>URL: {recipe.url}</p>
+  <p class="url">URL: {recipe.url}</p>
 
   <ul>
     <li>
