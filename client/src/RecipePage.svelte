@@ -1,7 +1,9 @@
 <script>
+  import { navigate } from "svelte-routing";
+
   import { toFullUrl } from './utils';
   import { recipes } from "./store";
-  import { updateRecipeNotes } from "./api"
+  import { updateRecipeNotes, deleteRecipe } from "./api"
 
   export let id;
 
@@ -53,6 +55,27 @@
         }
       })
   }
+
+  const onDelete = e => {
+    e.preventDefault();
+
+    const { id } = state.recipe;
+
+    deleteRecipe(id)
+      .then(() => {
+        recipes.update(rs => rs.filter(r => r.id !== id));
+        state.request = {
+          status: "success"
+        };
+        navigate("/");
+      })
+      .catch(error => {
+        state.request = {
+          status: "failure",
+          error
+        }
+      })
+  }
 </script>
 
 <style>
@@ -60,12 +83,21 @@
   margin-bottom: 20px;
 }
 
-h1 > span {
-  display: block;
+.title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
-h1 > small {
+
+.title h1, .title button {
+  margin: 0;
+}
+
+small {
   display: block;
   font-size: 13px;
+  font-weight: bold;
   word-wrap: break-word;
 }
 
@@ -86,10 +118,12 @@ h1 > small {
 
 {#if state.recipe !== null}
 <div class="recipe">
-  <h1>
-    <span>Recipe</span>
-    <small>{state.recipe.url}</small>
-  </h1>
+  <section class="title">
+    <h1>Recipe</h1>
+    <button type="button" on:click={onDelete}>Delete</button>
+  </section>
+
+  <small>{state.recipe.url}</small>
 
   <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
     <p>Go to recipe</p>
