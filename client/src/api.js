@@ -1,4 +1,4 @@
-const { apiUrl } = window.recipesConfig;
+const apiUrl = __API_URL__;
 
 export const getRecipes = () =>
   fetch(apiUrl).then(res => {

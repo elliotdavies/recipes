@@ -1,4 +1,9 @@
+const { DefinePlugin } = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+
+const config = {
+  apiUrl: "http://localhost:8000"
+};
 
 module.exports = {
   mode: "development",
@@ -32,10 +37,14 @@ module.exports = {
   },
 
   plugins: [
+    new DefinePlugin({
+      __API_URL__: JSON.stringify(config.apiUrl)
+    }),
+
     new HtmlWebpackPlugin({
       template: "index.html",
       templateParameters: {
-        apiUrl: "http://localhost:8000"
+        apiUrl: config.apiUrl
       }
     })
   ]

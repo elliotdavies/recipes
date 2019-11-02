@@ -1,9 +1,13 @@
 # Build
-FROM node:lts
+FROM node:lts as build
 
 COPY ./ ./
 
 RUN yarn && yarn build
 
 # Run
-CMD yarn serve-prod
+FROM nginx:latest
+
+COPY nginx.conf /etc/nginx/nginx.conf
+
+COPY --from=build /dist /usr/share/nginx/html

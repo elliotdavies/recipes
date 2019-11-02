@@ -1,9 +1,14 @@
+const { DefinePlugin } = require("webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const TerserJSPlugin = require("terser-webpack-plugin");
 const path = require("path");
+
+const config = {
+  apiUrl: "//api.recipes.elliotdavies.co.uk"
+};
 
 module.exports = {
   mode: "production",
@@ -47,13 +52,19 @@ module.exports = {
 
   plugins: [
     new CleanWebpackPlugin(),
+
+    new DefinePlugin({
+      __API_URL__: JSON.stringify(config.apiUrl)
+    }),
+
     new HtmlWebpackPlugin({
       template: "index.html",
       templateParameters: {
-        apiUrl: "%%API_URL%%"
+        apiUrl: config.apiUrl
       },
       favicon: "assets/favicon.png"
     }),
+
     new MiniCssExtractPlugin({
       filename: "[contenthash].[name].css"
     })
