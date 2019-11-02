@@ -18,6 +18,7 @@ module.exports = {
   devtool: "none",
 
   output: {
+    publicPath: "/",
     filename: "[contenthash].[name].js",
     pathinfo: false
   },
