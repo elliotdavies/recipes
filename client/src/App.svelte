@@ -2,9 +2,8 @@
   import { Router, Route } from 'svelte-routing';
 
   import Header from "./Header.svelte";
-  import SubmitRecipe from "./SubmitRecipe.svelte";
-  import RecipePage from "./RecipePage.svelte";
-  import RecipeList from "./RecipeList.svelte";
+  import Home from "./Home.svelte";
+  import Recipe from "./Recipe.svelte";
 
   let url = "";
 </script>
@@ -20,13 +19,11 @@
   <Header />
   <main>
     <Route path="/">
-      <SubmitRecipe />
+      <Home />
     </Route>
 
     <Route path="/recipe/:id" let:params>
-      <RecipePage id={params.id} />
+      <Recipe id={params.id} />
     </Route>
-
-    <RecipeList />
   </main>
 </Router>

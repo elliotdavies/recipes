@@ -1,6 +1,6 @@
 <script>
-  import { submitRecipe } from "./api";
-  import { recipes } from "./store";
+  import { submitRecipe } from "../api";
+  import { recipes } from "../store";
 
   let state = {
     url: "",
