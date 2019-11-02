@@ -1,12 +1,20 @@
 <script>
   import { Router, Route } from 'svelte-routing';
 
+  import { getRecipes } from "./api";
+  import { recipes } from "./store";
+
   import Header from "./Header.svelte";
   import Home from "./Home.svelte";
   import Recipe from "./Recipe.svelte";
   import Submit from "./Submit.svelte";
 
   let url = "";
+
+  getRecipes()
+    .then(rs => {
+      recipes.set(rs);
+    });
 </script>
 
 <style>
