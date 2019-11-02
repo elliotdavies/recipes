@@ -15,7 +15,12 @@ module.exports = {
     hot: true,
     open: true,
     port: 8080,
-    stats: "minimal"
+    stats: "minimal",
+
+    historyApiFallback: {
+      disableDotRule: true,
+      rewrites: [{ from: /^[^.]*$/, to: "/index.html" }]
+    }
   },
 
   devtool: "cheap-module-inline-source-map",
