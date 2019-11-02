@@ -13,10 +13,13 @@
     state.recipes = rs.sort((a,b) => b.id - a.id);
   });
 
-  $: trimmedSearchText = state.searchText.trim();
+  const normalise = s => s.trim().toLowerCase();
+
+  $: normalisedSearchText = normalise(state.searchText);
   $: filteredRecipes = state.recipes.filter(
     ({ url, notes }) => 
-      url.includes(trimmedSearchText) || notes.includes(trimmedSearchText)
+      normalise(url).includes(normalisedSearchText) ||
+      normalise(notes).includes(normalisedSearchText)
   );
 </script>
 
