@@ -1,10 +1,11 @@
 <script>
-  import Submit from "./Home/Submit.svelte"
+  import { Link } from 'svelte-routing';
+
   import List from "./Home/List.svelte"
 </script>
 
 <style>
 </style>
 
-<Submit />
+<Link to="/submit">Save new recipe</Link>
 <List />

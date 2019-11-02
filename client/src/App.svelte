@@ -4,6 +4,7 @@
   import Header from "./Header.svelte";
   import Home from "./Home.svelte";
   import Recipe from "./Recipe.svelte";
+  import Submit from "./Submit.svelte";
 
   let url = "";
 </script>
@@ -20,6 +21,10 @@
   <main>
     <Route path="/">
       <Home />
+    </Route>
+
+    <Route path="/submit">
+      <Submit />
     </Route>
 
     <Route path="/recipe/:id" let:params>
