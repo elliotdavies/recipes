@@ -25,6 +25,10 @@ module.exports = {
 
   devtool: "cheap-module-inline-source-map",
 
+  output: {
+    publicPath: "/"
+  },
+
   module: {
     rules: [
       {
