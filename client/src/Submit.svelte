@@ -1,56 +1,49 @@
 <script>
-  import { link } from 'svelte-routing';
+  import { link, navigate } from 'svelte-routing';
 
   import { submitRecipe } from "./api";
   import { recipes } from "./store";
+  import Form from './Recipe/Form.svelte'
 
   let state = {
-    form: {
-      url: "",
-      title: "",
-      notes: "",
-    },
-    request: {
-      status: "notAsked",
-    }
+    status: "notAsked",
+    recipe: undefined
   };
 
-  const onSubmit = e => {
-    e.preventDefault();
+  const onSave = recipe => {
+    const { url, title, notes } = recipe;
 
-    let { form: { url, title, notes } } = state;
-
-    if (!url.length || !title.length) return;
-    
     submitRecipe(url, title, notes)
       .then(recipe => {
-        state.request = {
+        state = {
           status: "success"
         };
         recipes.update(rs => [...rs, recipe])
       })
       .catch(error => {
-        state.request = {
+        state = {
           status: "failure",
-          error
+          error,
+          recipe
         };
       });
   };
 
+  const onCancel = () => {
+    navigate('/');
+  }
+
   const reset = () => {
-    state.form = {
-      url: "",
-      title: "",
-      notes: ""
-    };
-    state.request = {
-      status: "notAsked"
+    state = {
+      status: "notAsked",
+      recipe: undefined
     }
   };
 
   const retry = () => {
-    state.request = {
-      status: "notAsked"
+    state = {
+      status: "notAsked",
+      recipe: state.recipe
     }
   };
 </script>
@@ -61,35 +54,14 @@ h2 {
   font-size: 20px;
 }
 
-label {
-  width: 100%;
-  display: block;
-  margin-bottom: 10px;
-}
-
-label span {
-  display: block;
-  margin-right: 5px;
-  margin-bottom: 5px;
-}
-
-input, textarea {
-  width: 100%;
-  margin: 0;
-}
-
 button {
   width: 100%;
 }
 
-.request-status {
-  text-align: center;
-}
-
-.request-status a,
-.request-status button,
-.request-status span,
-.request-status code {
+a,
+button,
+span,
+code {
   display: block;
   margin-bottom: 15px;
 }
@@ -98,46 +70,25 @@ button {
 <section>
   <h2>Save new recipe</h2>
 
-  <form on:submit={onSubmit}>
-    <label>
-      <span>URL</span>
-      <input type="url" bind:value={state.form.url} />
-    </label>
+  {#if state.status === 'notAsked'}
 
-    <label>
-      <span>Title</span>
-      <input type="text" bind:value={state.form.title} />
-    </label>
+    <Form recipe={state.recipe} onSave={onSave} onCancel={onCancel} />
 
-    <label>
-      <span>Notes</span>
-      <textarea bind:value={state.form.notes}></textarea>
-    </label>
+  {:else if state.status === 'success'}
 
-    <div class="request-status">
-    {#if state.request.status === 'success'}
-
-      <div class="success">
-        <span class="status">Saved successfully!</span>
-        <button type="button" on:click={reset}>Save another</button>
-        <a href="/" use:link>Go home</a>
-      </div>
-
-    {:else if state.request.status === 'failure'}
-
-      <div class="failure">
-        <span class="status success">Failed to save :-(</span>
-        <code>{state.request.error}</code>
-        <button type="button" on:click={retry}>Try again</button>
-      </div>
-
-    {:else if state.request.status === 'notAsked'}
-
-      <div class="notAsked">
-        <button type="submit">Submit</button>
-      </div>
-
-    {/if}
+    <div class="success">
+      <span class="status">Saved successfully!</span>
+      <button type="button" on:click={reset}>Save another</button>
+      <a href="/" use:link>Go home</a>
     </div>
-  </form>
+
+  {:else if state.status === 'failure'}
+
+    <div class="failure">
+      <span class="status success">Failed to save :-(</span>
+      <code>{state.error}</code>
+      <button type="button" on:click={retry}>Try again</button>
+    </div>
+
+  {/if}
 </section>

@@ -65,18 +65,11 @@ fn add_recipe(db: DBConn, data: Json<Submission>) -> status::Custom<Json<JsonVal
     status::Custom(Status::Created, Json(json!(result)))
 }
 
-#[derive(Serialize, Deserialize)]
-struct Update {
-    id: i32,
-    title: String,
-    notes: String
-}
-
 #[put("/",  data = "<data>")]
-fn update_recipe(db: DBConn, data: Json<Update>) -> status::Custom<()> {
+fn update_recipe(db: DBConn, data: Json<Recipe>) -> status::Custom<()> {
     db.query(
-        "UPDATE recipes SET title = $1, notes = $2 WHERE id = $3",
-         &[&data.title, &data.notes, &data.id]
+        "UPDATE recipes SET url = $1, title = $2, notes = $3 WHERE id = $4",
+         &[&data.url, &data.title, &data.notes, &data.id]
     ).unwrap();
 
     status::Custom(Status::NoContent, ())

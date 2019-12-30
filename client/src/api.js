@@ -18,13 +18,13 @@ export const submitRecipe = (url, title, notes) =>
     else return res.json();
   });
 
-export const updateRecipe = (id, title, notes) =>
+export const updateRecipe = (id, url, title, notes) =>
   fetch(apiUrl, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ id, title, notes })
+    body: JSON.stringify({ id, url, title, notes })
   }).then(res => {
     if (res.status !== 204) throw new Error(res);
     else return res;

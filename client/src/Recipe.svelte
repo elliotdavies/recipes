@@ -5,12 +5,13 @@
   import { recipes } from "./store";
   import { updateRecipe, deleteRecipe } from "./api"
 
+  import Form from './Recipe/Form.svelte'
+
   export let id;
 
   let state = {
     recipe: null,
     editing: false,
-    updatedNotes: "",
     request: {
       status: "notAsked"
     }
@@ -21,32 +22,20 @@
     if (match) state.recipe = match;
   });
 
-  const onEdit = e => {
-    e.preventDefault()
-    state.updatedNotes = state.recipe.notes;
+  const onEdit = () => {
     state.editing = true;
   }
 
-  const onCancel = e => {
-    e.preventDefault()
-    state.updatedNotes = "";
-    state.editing = false;
-  }
+  const onSave = recipe => {
+    const { url, title, notes } = recipe;
 
-  const onSave = e => {
-    e.preventDefault();
-    state.editing = false;
-
-    const { updatedNotes, recipe: { id, title }} = state;
-
-    updateRecipe(id, title, updatedNotes)
+    updateRecipe(state.recipe.id, url, title, notes)
       .then(() => {
         recipes.update(rs =>
-          rs.map(r => r.id === id ? { ...r, notes: updatedNotes } : r));
+          rs.map(r => r.id === id ? { ...r, recipe } : r));
         state.request = {
           status: "success"
         }
-        state.notes = "";
       })
       .catch(error => {
         state.request = {
@@ -54,6 +43,16 @@
           error
         }
       })
+      .then(() => {
+        state.editing = false;
+      })
+  }
+
+  const reset = () => {
+    state.editing = false;
+    state.request = {
+      status: 'notAsked'
+    }
   }
 
   const onDelete = e => {
@@ -79,78 +78,77 @@
 </script>
 
 <style>
-.recipe {
+section {
   margin-bottom: 20px;
 }
 
-.title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+.title h1 {
+  margin: 0 0 10px 0;
 }
 
-.title h1, .title button {
-  margin: 0;
-}
-
-small {
+.title small {
   display: block;
   font-size: 13px;
   font-weight: bold;
   word-wrap: break-word;
 }
 
-.notes textarea {
-  width: 100%;
-  margin: 0;
+.notes h2 {
+  margin: 0 0 10px 0;
 }
-
-.controls {
-  width: 100%;
-}
-
 .notes .notes-preview {
   white-space: pre-wrap;
   margin-bottom: 10px;
+}
+
+.actions button {
+  margin: 0 0 10px 0;
+  width: 100%;
 }
 </style>
 
 {#if state.recipe !== null}
 <div class="recipe">
-  <section class="title">
-    <h1>{state.recipe.title}</h1>
-    <button type="button" on:click={onDelete}>Delete</button>
-  </section>
 
-  <small>{state.recipe.url}</small>
+  {#if !state.editing && state.request.status == 'notAsked'}
+    <section class="title">
+      <h1>{state.recipe.title}</h1>
+      <small>{state.recipe.url}</small>
 
-  <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
-    <p>Go to recipe</p>
-  </a>
+      <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
+        <p>Go to recipe</p>
+      </a>
+    </section>
 
-  <section class="notes">
-    <h2>Notes</h2>
-    {#if state.editing}
-      <textarea bind:value={state.updatedNotes}></textarea>
-      <div class="edit controls">
-        <button type="button" on:click={onSave}>Save</button>
-        <button type="button" on:click={onCancel}>Cancel</button>
-      </div>
-    {:else}
+    <section class="notes">
+      <h2>Notes</h2>
       <div class="notes-preview">{state.recipe.notes}</div>
-      <div class="preview controls">
-        <button type="button" on:click={onEdit}>Edit</button>
-      </div>
-    {/if}
+    </section>
 
-    <div class="request-status">
-    {#if state.request.status === 'success'}
-      Saved!
-    {:else if state.request.status === 'failure'}
-      Failed to save
-    <code>{state.request.error}</code>
-    {/if}
-  </section>
+    <section class="actions">
+      <button type="button" on:click={onEdit}>Edit</button>
+      <button type="button" on:click={onDelete}>Delete</button>
+    </section>
+
+  {:else if state.editing && state.request.status === 'notAsked'}
+
+    <Form recipe={state.recipe} onSave={onSave} onCancel={reset} />
+
+  {:else if state.request.status === 'success'}
+
+    <div class="success">
+      <span class="status">Updated successfully</span>
+      <button type="button" on:click={reset}>Go back</button>
+    </div>
+
+  {:else if state.request.status === 'failure'}
+
+    <div class="failure">
+      <span class="status success">Failed to update :-(</span>
+      <code>{state.error}</code>
+      <button type="button" on:click={reset}>Go back</button>
+    </div>
+
+  {/if}
 </div>
 {/if}
