@@ -16,9 +16,8 @@
 
   $: normalisedSearchText = normalise(state.searchText);
   $: filteredRecipes = state.recipes.filter(
-    ({ url, notes }) => 
-      normalise(url).includes(normalisedSearchText) ||
-      normalise(notes).includes(normalisedSearchText)
+    ({ url, title, notes }) => 
+      [url,title,notes].some(x => normalise(x).includes(normalisedSearchText))
   );
 </script>
 
@@ -66,7 +65,7 @@ h2 {
   {#each filteredRecipes as recipe}
     <li class="recipe">
       <a href={`/recipe/${recipe.id}`} use:link>
-        <p class="title">{recipe.title}</p>
+        <p class="title">{recipe.title || recipe.url}</p>
       </a>
     </li>
   {:else}
