@@ -3,7 +3,7 @@
 
   import { toFullUrl } from './utils';
   import { recipes } from "./store";
-  import { updateRecipeNotes, deleteRecipe } from "./api"
+  import { updateRecipe, deleteRecipe } from "./api"
 
   export let id;
 
@@ -37,9 +37,9 @@
     e.preventDefault();
     state.editing = false;
 
-    const { updatedNotes, recipe: { id }} = state;
+    const { updatedNotes, recipe: { id, title }} = state;
 
-    updateRecipeNotes(id, updatedNotes)
+    updateRecipe(id, title, updatedNotes)
       .then(() => {
         recipes.update(rs =>
           rs.map(r => r.id === id ? { ...r, notes: updatedNotes } : r));
@@ -119,7 +119,7 @@ small {
 {#if state.recipe !== null}
 <div class="recipe">
   <section class="title">
-    <h1>Recipe</h1>
+    <h1>{state.recipe.title}</h1>
     <button type="button" on:click={onDelete}>Delete</button>
   </section>
 

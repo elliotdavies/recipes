@@ -7,6 +7,7 @@
   let state = {
     form: {
       url: "",
+      title: "",
       notes: "",
     },
     request: {
@@ -17,11 +18,11 @@
   const onSubmit = e => {
     e.preventDefault();
 
-    let { form: { url, notes } } = state;
+    let { form: { url, title, notes } } = state;
 
-    if (!url.length) return;
+    if (!url.length || !title.length) return;
     
-    submitRecipe(url, notes)
+    submitRecipe(url, title, notes)
       .then(recipe => {
         state.request = {
           status: "success"
@@ -39,6 +40,7 @@
   const reset = () => {
     state.form = {
       url: "",
+      title: "",
       notes: ""
     };
     state.request = {
@@ -100,6 +102,11 @@ button {
     <label>
       <span>URL</span>
       <input type="url" bind:value={state.form.url} />
+    </label>
+
+    <label>
+      <span>Title</span>
+      <input type="text" bind:value={state.form.title} />
     </label>
 
     <label>

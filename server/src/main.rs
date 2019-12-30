@@ -19,6 +19,7 @@ struct DBConn(postgres::Connection);
 struct Recipe {
     id: i32,
     url: String,
+    title: String,
     notes: String
 }
 
@@ -28,8 +29,9 @@ fn get_recipes(db: DBConn) -> status::Custom<Json<JsonValue>> {
     for row in &db.query("SELECT * FROM recipes", &[]).unwrap() {
         let id : i32 = row.get("id");
         let url : String = row.get("url");
+        let title : String = row.get("title");
         let notes : String = row.get("notes");
-        let recipe = Recipe { id, url, notes };
+        let recipe = Recipe { id, url, title, notes };
         recipes.push(recipe);
     }
 
@@ -39,6 +41,7 @@ fn get_recipes(db: DBConn) -> status::Custom<Json<JsonValue>> {
 #[derive(Serialize, Deserialize)]
 struct Submission {
     url: String,
+    title: String,
     notes: String
 }
 
@@ -46,12 +49,13 @@ struct Submission {
 fn add_recipe(db: DBConn, data: Json<Submission>) -> status::Custom<Json<JsonValue>> {
     let mut result: Option<Recipe> = None;
     for row in &db.query(
-        "INSERT INTO recipes (url, notes) VALUES ($1, $2) RETURNING id",
-         &[&data.url, &data.notes]
+        "INSERT INTO recipes (url, title, notes) VALUES ($1, $2, $3) RETURNING id",
+         &[&data.url, &data.title, &data.notes]
     ).unwrap() {
         let recipe = Recipe {
             id: row.get("id"),
             url: data.url.clone(),
+            title: data.title.clone(),
             notes: data.notes.clone()
         };
 
@@ -62,16 +66,17 @@ fn add_recipe(db: DBConn, data: Json<Submission>) -> status::Custom<Json<JsonVal
 }
 
 #[derive(Serialize, Deserialize)]
-struct UpdateNotes {
+struct Update {
     id: i32,
+    title: String,
     notes: String
 }
 
 #[put("/",  data = "<data>")]
-fn update_notes(db: DBConn, data: Json<UpdateNotes>) -> status::Custom<()> {
+fn update_recipe(db: DBConn, data: Json<Update>) -> status::Custom<()> {
     db.query(
-        "UPDATE recipes SET notes = $1 WHERE id = $2",
-         &[&data.notes, &data.id]
+        "UPDATE recipes SET title = $1, notes = $2 WHERE id = $3",
+         &[&data.title, &data.notes, &data.id]
     ).unwrap();
 
     status::Custom(Status::NoContent, ())
@@ -100,7 +105,7 @@ fn main() -> Result<(), rocket_cors::Error> {
     rocket::ignite()
         .attach(DBConn::fairing())
         .attach(cors)
-        .mount("/", routes![get_recipes, add_recipe, update_notes, delete_recipe])
+        .mount("/", routes![get_recipes, add_recipe, update_recipe, delete_recipe])
         .launch();
 
     Ok(())

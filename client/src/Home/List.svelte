@@ -2,7 +2,6 @@
   import { link } from 'svelte-routing';
 
   import { recipes } from "../store";
-  import { toFullUrl } from '../utils';
 
   let state = {
     recipes: [],
@@ -67,7 +66,7 @@ h2 {
   {#each filteredRecipes as recipe}
     <li class="recipe">
       <a href={`/recipe/${recipe.id}`} use:link>
-        <p class="url">{recipe.url}</p>
+        <p class="title">{recipe.title}</p>
       </a>
     </li>
   {:else}

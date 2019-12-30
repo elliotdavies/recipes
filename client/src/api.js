@@ -6,25 +6,25 @@ export const getRecipes = () =>
     else return res.json();
   });
 
-export const submitRecipe = (url, notes) =>
+export const submitRecipe = (url, title, notes) =>
   fetch(apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ url, notes })
+    body: JSON.stringify({ url, title, notes })
   }).then(res => {
     if (res.status !== 201) throw new Error(res);
     else return res.json();
   });
 
-export const updateRecipeNotes = (id, notes) =>
+export const updateRecipe = (id, title, notes) =>
   fetch(apiUrl, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ id, notes })
+    body: JSON.stringify({ id, title, notes })
   }).then(res => {
     if (res.status !== 204) throw new Error(res);
     else return res;
