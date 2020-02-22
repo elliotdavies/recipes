@@ -5,9 +5,13 @@ authors = ["Elliot Davies <elliot.a.davies@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bytes = "0.4.12"
+futures = "0.1.16"
 postgres = "0.15"
 rocket = "0.4.0"
 rocket_cors = "0.5.0-beta-2"
+rusoto_core = "0.42"
+rusoto_s3 = "0.42"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 
