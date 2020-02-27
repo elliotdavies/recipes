@@ -1,7 +1,6 @@
-FROM rustlang/rust:nightly
+FROM clux/muslrust:stable
 
 ENV ROCKET_DATABASES '{recipes={url="postgres://recipes:password123@db:5432/recipes"}}'
-ENV TARGET_CC clang
 
 WORKDIR /server
 
@@ -12,6 +11,4 @@ RUN rustup target add x86_64-unknown-linux-musl
 
 RUN cargo install cargo-watch
 
-RUN apt-get update && apt-get install -y clang
-
-CMD cargo watch -x 'run --target x86_64-unknown-linux-musl'
+CMD cargo watch -x run

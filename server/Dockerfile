@@ -1,23 +1,17 @@
 # Build
-FROM rustlang/rust:nightly as build
+FROM clux/muslrust:stable as build
 
 COPY ./ ./
 
-RUN rustup toolchain install nightly-2019-08-09
-
-RUN rustup default nightly-2019-08-09
+RUN rustup toolchain install nightly-2019-08-09 && \
+    rustup default nightly-2019-08-09
 
 RUN rustup target add x86_64-unknown-linux-musl
 
-RUN apt-get update && apt-get install -y clang
+RUN cargo build --target x86_64-unknown-linux-musl --release
 
-RUN TARGET_CC=clang cargo build --target x86_64-unknown-linux-musl --release
-
-RUN mkdir /build
-
-RUN cp target/x86_64-unknown-linux-musl/release/recipes /build
-
-RUN ls /build
+RUN mkdir /build && \
+    cp target/x86_64-unknown-linux-musl/release/recipes /build
 
 # Deploy
 FROM scratch
