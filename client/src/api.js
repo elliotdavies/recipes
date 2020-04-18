@@ -41,3 +41,21 @@ export const deleteRecipe = id =>
     if (res.status !== 204) throw new Error(res);
     else return res;
   });
+
+// tmp
+
+export const getImage = filename =>
+  fetch(`${apiUrl}/image/${filename}`).then(res => {
+    if (res.status !== 200) throw new Error(res);
+    else return res.json();
+  });
+
+export const postImage = formData =>
+  fetch(`${apiUrl}/image`, {
+    method: 'POST',
+    body: formData
+  }).then(res => {
+    if (res.status !== 200) throw new Error(res);
+    else return res.json();
+  });
+

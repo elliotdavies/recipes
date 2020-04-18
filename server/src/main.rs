@@ -4,16 +4,71 @@
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
 
+use std::fs;
+use rocket::Data;
 use rocket::response::status;
+use rocket::http::ContentType;
 use rocket::http::Status;
 use rocket_contrib::json::{Json, JsonValue};
 use rocket_contrib::databases::postgres;
 use rocket_cors;
+use rocket_multipart_form_data::{mime, MultipartFormDataOptions, MultipartFormData, MultipartFormDataField, FileField};
 
 mod cors;
+mod s3;
 
 #[database("recipes")]
 struct DBConn(postgres::Connection);
+
+// tmp
+
+#[get("/image/<filename>")]
+fn get_image(_db: DBConn, filename: String) -> status::Custom<()> {
+    let filepath: String = "images/".to_owned() + &filename;
+    s3::get_object("recipes.elliotdavies.co.uk", &filepath);
+
+    status::Custom(Status::Ok, ())
+}
+
+// example with error handling etc at
+// https://github.com/magiclen/rocket-multipart-form-data/blob/master/examples/image_uploader.rs
+#[post("/image", data = "<data>")]
+fn post_image(_db: DBConn, content_type: &ContentType, data: Data) -> status::Custom<&str> {
+    let mut options = MultipartFormDataOptions::new();
+    options.allowed_fields.push(MultipartFormDataField::file("image").content_type_by_string(Some(mime::IMAGE_STAR)).unwrap());
+
+    let multipart_form_data = MultipartFormData::parse(content_type, data, options).unwrap();
+    let image = multipart_form_data.files.get("image");
+
+    if let Some(image) = image {
+        match image {
+            FileField::Single(file) => {
+                let content_type = &file.content_type;
+                let filename = &file.file_name;
+                let path = &file.path;
+                println!("{:#?} {:#?} {:#?}", content_type, filename, path);
+
+                let contents = fs::read(path);
+                match contents {
+                    Ok(vec) => {
+                        s3::put_object(vec, "recipes.elliotdavies.co.uk", "images/test_image.jpg");
+                        status::Custom(Status::Ok, "file uploaded successfully")
+                    }
+                    Err(_err) => {
+                        status::Custom(Status::Ok, "error reading file")
+                    }
+                }
+            }
+            FileField::Multiple(_files) => {
+                status::Custom(Status::Ok, "multiple files")
+            }
+        }
+    } else {
+        status::Custom(Status::Ok, "failed")
+    }
+}
+
+// tmp
 
 #[derive(Serialize, Deserialize)]
 struct Recipe {
@@ -98,7 +153,14 @@ fn main() -> Result<(), rocket_cors::Error> {
     rocket::ignite()
         .attach(DBConn::fairing())
         .attach(cors)
-        .mount("/", routes![get_recipes, add_recipe, update_recipe, delete_recipe])
+        .mount("/", routes!
+            [ get_recipes
+            , add_recipe
+            , update_recipe
+            , delete_recipe
+            , get_image
+            , post_image
+            ])
         .launch();
 
     Ok(())
