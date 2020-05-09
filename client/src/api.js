@@ -51,11 +51,14 @@ export const getImage = filename =>
   });
 
 export const postImage = formData =>
-  fetch(`${apiUrl}/image`, {
-    method: 'POST',
-    body: formData
-  }).then(res => {
-    if (res.status !== 200) throw new Error(res);
-    else return res.json();
-  });
+  new Promise((res) => {
+    res(formData.get('image').name)
+  })
+  // fetch(`${apiUrl}/image`, {
+  //   method: 'POST',
+  //   body: formData
+  // }).then(res => {
+  //   if (res.status !== 200) throw new Error(res);
+  //   else return res.json();
+  // });
 

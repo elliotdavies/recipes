@@ -26,10 +26,10 @@
     state.editing = true;
   }
 
-  const onSave = recipe => {
-    const { url, title, notes } = recipe;
+  const onSaveRecipe = recipe => {
+    const { url, title, notes, images } = recipe;
 
-    updateRecipe(state.recipe.id, url, title, notes)
+    updateRecipe(state.recipe.id, url, title, notes, images)
       .then(() => {
         recipes.update(rs =>
           rs.map(r => r.id === id ? { ...r, recipe } : r));
@@ -132,7 +132,7 @@ section {
 
   {:else if state.editing && state.request.status === 'notAsked'}
 
-    <Form recipe={state.recipe} onSave={onSave} onCancel={reset} />
+    <Form recipe={state.recipe} onSaveRecipe={onSaveRecipe} onCancel={reset} />
 
   {:else if state.request.status === 'success'}
 

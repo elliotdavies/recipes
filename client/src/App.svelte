@@ -11,21 +11,10 @@
 
   let url = "";
 
-/*   getRecipes() */
-/*     .then(rs => { */
-/*       recipes.set(rs); */
-/*     }); */
-
-  /* getImage("abc.png").then(res => console.log(res)); */
-
-  const onSubmit = e => {
-    e.preventDefault();
-    console.log({a:e.target});
-    const files = e.target.elements[0].files;
-    const formData = new FormData();
-    formData.append('image', files[0]);
-    postImage(formData);
-  }
+  getRecipes()
+    .then(rs => {
+      recipes.set(rs);
+    });
 </script>
 
 <style>
@@ -37,11 +26,6 @@
 
 <Router url="{url}">
   <Header />
-
-  <form on:submit={onSubmit}>
-    <input name="file" type="file" accept="image/*" />
-    <button type="submit">Do it</button>
-  </form>
 
   <main>
     <Route path="/">
