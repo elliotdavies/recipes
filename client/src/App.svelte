@@ -26,6 +26,7 @@
 
 <Router url="{url}">
   <Header />
+
   <main>
     <Route path="/">
       <Home />

@@ -1,7 +1,5 @@
 FROM clux/muslrust:stable
 
-ENV ROCKET_DATABASES '{recipes={url="postgres://recipes:password123@db:5432/recipes"}}'
-
 WORKDIR /server
 
 RUN rustup toolchain install nightly-2019-08-09 && \

@@ -11,9 +11,9 @@
   };
 
   const onSave = recipe => {
-    const { url, title, notes } = recipe;
+    const { url, title, notes, images } = recipe;
 
-    submitRecipe(url, title, notes)
+    submitRecipe(url, title, notes, images)
       .then(recipe => {
         state = {
           status: "success"

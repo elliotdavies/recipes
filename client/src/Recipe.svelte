@@ -27,9 +27,9 @@
   }
 
   const onSave = recipe => {
-    const { url, title, notes } = recipe;
+    const { url, title, notes, images } = recipe;
 
-    updateRecipe(state.recipe.id, url, title, notes)
+    updateRecipe(state.recipe.id, url, title, notes, images)
       .then(() => {
         recipes.update(rs =>
           rs.map(r => r.id === id ? { ...r, recipe } : r));
@@ -93,7 +93,8 @@ section {
   word-wrap: break-word;
 }
 
-.notes h2 {
+.notes h2,
+.images h2 {
   margin: 0 0 10px 0;
 }
 .notes .notes-preview {
@@ -118,6 +119,21 @@ section {
       <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
         <p>Go to recipe</p>
       </a>
+    </section>
+
+    <section class="images">
+      <h2>Images</h2>
+      <div class="images-preview">
+        <ul>
+          {#each state.recipe.images as filename}
+            <li class="image">
+              <a href={`//recipes.elliotdavies.co.uk/images/${filename}`}>{filename}</a>
+            </li>
+          {:else}
+            <small>No images yet...</small>
+          {/each}
+        </ul>
+      </div>
     </section>
 
     <section class="notes">
