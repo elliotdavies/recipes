@@ -1,7 +1,7 @@
 <script>
   import { Router, Route } from 'svelte-routing';
 
-  import { getRecipes, getImage, postImage } from "./api";
+  import { getRecipes } from "./api";
   import { recipes } from "./store";
 
   import Header from "./Header.svelte";
