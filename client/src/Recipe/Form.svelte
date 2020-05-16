@@ -5,11 +5,10 @@
     url: "",
     title: "",
     notes: "",
-    imageIds: [],
+    images: [],
   }
 
-  export let onSaveImage;
-  export let onSaveRecipe;
+  export let onSave;
   export let onCancel;
 
   let state = {
@@ -35,14 +34,12 @@
     formData.append('image', state.selectedImage);
 
     postImage(formData)
-      .then(imageId => {
-        console.log(imageId)
-        state.recipe.imageIds.push(imageId);
+      .then(filename => {
+        state.recipe.images.push(filename);
         state.imageRequest = {
           status: 'success'
         }
         state.selectedImage = null
-        console.log(state)
       })
       .catch(error => {
         state.imageRequest = {
@@ -57,6 +54,13 @@
 
     const { title } = state.recipe;
     if (!title.length) return;
+
+    const { selectedImage } = state;
+    if (selectedImage !== null) {
+      console.log('Image selected but not uploaded');
+      console.log(selectedImage);
+      return;
+    }
 
     onSave(state.recipe);
   }
@@ -108,16 +112,16 @@ fieldset {
 
   <label>
     <span>Title</span>
-    <input type="text" bind:value={state.recipe.title} />
+    <input type="text" required bind:value={state.recipe.title} />
   </label>
 
   <fieldset>
     <span>Images</span>
 
     <ul class="images">
-    {#each state.recipe.imageIds as imageId}
+    {#each state.recipe.images as filename}
       <li class="image">
-        <span>{imageId}</span>
+        <span>{filename}</span>
       </li>
     {:else}
       <small>No images yet...</small>

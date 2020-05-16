@@ -29,18 +29,19 @@ pub fn get_object(bucket: &str, filename: &str) {
     assert!(body.len() > 0);
 }
 
-pub fn put_object(contents: Vec<u8>, bucket: &str, filename: &str) {
+pub fn put_object(contents: Vec<u8>, bucket: &str, filename: &str, content_type: &str) {
     let client = S3Client::new(Region::EuWest2);
 
     let put_request = PutObjectRequest {
         bucket: bucket.to_owned(),
         key: filename.to_owned(),
         body: Some(contents.into()),
+        content_type: Some(content_type.to_owned()),
         ..Default::default()
     };
 
     client
         .put_object(put_request)
         .sync()
-        .expect("Failed to put test object");
+        .expect("Failed to put object");
 }

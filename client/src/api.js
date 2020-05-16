@@ -6,25 +6,25 @@ export const getRecipes = () =>
     else return res.json();
   });
 
-export const submitRecipe = (url, title, notes) =>
+export const submitRecipe = (url, title, notes, images) =>
   fetch(apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ url, title, notes })
+    body: JSON.stringify({ url, title, notes, images })
   }).then(res => {
     if (res.status !== 201) throw new Error(res);
     else return res.json();
   });
 
-export const updateRecipe = (id, url, title, notes) =>
+export const updateRecipe = (id, url, title, notes, images) =>
   fetch(apiUrl, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ id, url, title, notes })
+    body: JSON.stringify({ id, url, title, notes, images })
   }).then(res => {
     if (res.status !== 204) throw new Error(res);
     else return res;
@@ -42,23 +42,11 @@ export const deleteRecipe = id =>
     else return res;
   });
 
-// tmp
-
-export const getImage = filename =>
-  fetch(`${apiUrl}/image/${filename}`).then(res => {
+export const postImage = formData =>
+  fetch(`${apiUrl}/image`, {
+    method: 'POST',
+    body: formData
+  }).then(res => {
     if (res.status !== 200) throw new Error(res);
     else return res.json();
-  });
-
-export const postImage = formData =>
-  new Promise((res) => {
-    res(formData.get('image').name)
-  })
-  // fetch(`${apiUrl}/image`, {
-  //   method: 'POST',
-  //   body: formData
-  // }).then(res => {
-  //   if (res.status !== 200) throw new Error(res);
-  //   else return res.json();
-  // });
-
+  }).then(json => json.filename);

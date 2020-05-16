@@ -26,7 +26,7 @@
     state.editing = true;
   }
 
-  const onSaveRecipe = recipe => {
+  const onSave = recipe => {
     const { url, title, notes, images } = recipe;
 
     updateRecipe(state.recipe.id, url, title, notes, images)
@@ -93,7 +93,8 @@ section {
   word-wrap: break-word;
 }
 
-.notes h2 {
+.notes h2,
+.images h2 {
   margin: 0 0 10px 0;
 }
 .notes .notes-preview {
@@ -120,6 +121,21 @@ section {
       </a>
     </section>
 
+    <section class="images">
+      <h2>Images</h2>
+      <div class="images-preview">
+        <ul>
+          {#each state.recipe.images as filename}
+            <li class="image">
+              <a href={`//recipes.elliotdavies.co.uk/images/${filename}`}>{filename}</a>
+            </li>
+          {:else}
+            <small>No images yet...</small>
+          {/each}
+        </ul>
+      </div>
+    </section>
+
     <section class="notes">
       <h2>Notes</h2>
       <div class="notes-preview">{state.recipe.notes}</div>
@@ -132,7 +148,7 @@ section {
 
   {:else if state.editing && state.request.status === 'notAsked'}
 
-    <Form recipe={state.recipe} onSaveRecipe={onSaveRecipe} onCancel={reset} />
+    <Form recipe={state.recipe} onSave={onSave} onCancel={reset} />
 
   {:else if state.request.status === 'success'}
 
