@@ -44,6 +44,8 @@ fn post_image(
     content_type: &ContentType,
     data: Data,
 ) -> status::Custom<Json<JsonValue>> {
+    println!("post_image");
+
     let mut options = MultipartFormDataOptions::new();
     options.allowed_fields.push(
         MultipartFormDataField::file("image")
@@ -51,15 +53,28 @@ fn post_image(
             .unwrap(),
     );
 
+    println!("post_image options: {:#?}", options);
+
     let multipart_form_data = MultipartFormData::parse(content_type, data, options).unwrap();
+
+    println!("post_image m_f_d: {:#?}", multipart_form_data);
+
     let image = multipart_form_data.files.get("image");
+
+    println!("post_image image: {:#?}", image);
 
     if let Some(image) = image {
         match image {
             FileField::Single(file) => {
                 let maybe_filename = file.file_name.as_ref();
+                println!("post_image maybe_filename: {:#?}", maybe_filename);
+
                 let maybe_content_type = file.content_type.as_ref();
+                println!("post_image maybe_content_type: {:#?}", maybe_content_type);
+
                 let contents_result = fs::read(&file.path);
+                let maybe_err = contents_result.as_ref().err();
+                println!("post_image contents_result: {:#?}", maybe_err);
 
                 match (maybe_filename, maybe_content_type, contents_result) {
                     (Some(filename), Some(content_type), Ok(contents)) => {
