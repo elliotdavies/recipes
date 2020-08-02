@@ -24,9 +24,13 @@ jobs:
           paths:
             - dist
   deploy-client:
+    requires:
+      - build-client
     docker:
       - image: cimg/python:3.7
     steps:
+      - attach_workspace:
+          at: .
       - aws-s3/sync:
           # arguments: |
           #   --acl public-read \
