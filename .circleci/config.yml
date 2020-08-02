@@ -31,6 +31,8 @@ jobs:
       - attach_workspace:
           at: .
       - aws-s3/copy:
+          arguments: |
+            --recursive
           from: dist
           to: 's3://recipes.elliotdavies.co.uk'
 
