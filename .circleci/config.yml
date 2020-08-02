@@ -5,9 +5,28 @@ orbs:
   aws-ecs: circleci/aws-ecs@0.0.11
   aws-s3: circleci/aws-s3@1.0.16
 
-workflows:
-  build-deploy:
-    jobs:
+jobs:
+  client:
+    filters:
+      branches:
+        only: master
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - run:
+          name: Install dependencies
+          command: yarn
+      - run:
+          name: Build
+          command: yarn build
+      - aws-s3/sync:
+          # arguments: |
+          #   --acl public-read \
+          #   --cache-control "max-age=86400"
+          from: ./dist
+          overwrite: true
+          to: 's3://recipes.elliotdavies.co.uk'
+
       # - aws-ecr/build-and-push-image:
       #     name: build-server
       #     account-url: AWS_ECR_ACCOUNT_URL
@@ -20,27 +39,6 @@ workflows:
       #     region: AWS_REGION
       #     repo: recipes-server
       #     tag: ${CIRCLE_SHA1}
-
-      - client:
-          filters:
-            branches:
-              only: master
-          docker:
-            - image: cimg/node:lts
-          steps:
-            - run:
-                name: Install dependencies
-                command: yarn
-            - run:
-                name: Build
-                command: yarn build
-            - aws-s3/sync:
-                # arguments: |
-                #   --acl public-read \
-                #   --cache-control "max-age=86400"
-                from: ./dist
-                overwrite: true
-                to: 's3://recipes.elliotdavies.co.uk'
 
       # - aws-ecr/build-and-push-image:
       #     name: build-client
@@ -76,3 +74,8 @@ workflows:
       #     cluster-name: 'recipes'
       #     service-name: 'recipes-client'
       #     container-image-name-updates: 'container=recipes-client,tag=${CIRCLE_SHA1}'
+
+workflows:
+  build-deploy:
+    jobs:
+      - client
