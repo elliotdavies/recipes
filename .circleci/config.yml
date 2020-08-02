@@ -7,9 +7,6 @@ orbs:
 
 jobs:
   client:
-    filters:
-      branches:
-        only: master
     docker:
       - image: cimg/node:lts
     steps:
