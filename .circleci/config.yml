@@ -11,7 +11,7 @@ jobs:
       - image: cimg/node:lts
     working_directory: ~/recipes/client
     steps:
-      - checkout
+      - checkout:
           path: ~/recipes
       - run:
           name: Install
