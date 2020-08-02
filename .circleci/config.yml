@@ -9,9 +9,12 @@ jobs:
   client:
     docker:
       - image: cimg/node:lts
+    working_directory: ~/recipes/client
     steps:
+      - checkout
+          path: ~/recipes
       - run:
-          name: Install dependencies
+          name: Install
           command: yarn
       - run:
           name: Build
