@@ -23,9 +23,8 @@ jobs:
           root: .
           paths:
             - dist
+
   deploy-client:
-    requires:
-      - build-client
     docker:
       - image: cimg/python:3.7
     steps:
@@ -91,4 +90,6 @@ workflows:
   build-deploy-client:
     jobs:
       - build-client
-      - deploy-client
+      - deploy-client:
+          requires:
+            - build-client
