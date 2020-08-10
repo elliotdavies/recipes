@@ -1,0 +1,17 @@
+{
+  "name": "recipes-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "serverless deploy --verbose",
+    "deploy-local": "yarn deploy --aws-profile elliot-laptop"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "serverless-http": "^2.5.0"
+  },
+  "devDependencies": {
+    "serverless": "^1.78.1"
+  }
+}
