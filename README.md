@@ -1,8 +1,8 @@
 # Recipes
 
-## Deployment
+## Deployment
 
-### RDS
+### RDS
 
 Until a better migration story is written:
 
