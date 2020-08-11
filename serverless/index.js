@@ -1,11 +1,13 @@
 const serverless = require('serverless-http');
 const express = require('express')
-const { Client } = require('pg')
+const cors = require('cors')
+const { Pool } = require('pg')
 
 const app = express()
 app.disable('x-powered-by')
+app.options('*', cors())
 
-const pg = new Client()
+const pg = new Pool()
 
 /** 
  * @TODO
@@ -76,4 +78,5 @@ app.delete('/', async (req, res) => {
   res.sendStatus(204)
 })
 
-module.exports.handler = serverless(app);
+module.exports.handler = serverless(app)
+app.listen(8000)

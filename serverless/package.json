@@ -4,16 +4,19 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "watch": "PGDATABASE=recipes PGUSER=recipes PGPASSWORD=password123 serverless offline start",
     "deploy": "serverless deploy --verbose",
     "deploy-local": "yarn deploy --aws-profile elliot-laptop",
     "invoke-local": "PGDATABASE=recipes PGUSER=recipes PGPASSWORD=password123 serverless invoke local -f app"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "pg": "^8.3.0",
     "serverless-http": "^2.5.0"
   },
   "devDependencies": {
-    "serverless": "^1.78.1"
+    "serverless": "^1.78.1",
+    "serverless-offline": "^6.5.0"
   }
 }
