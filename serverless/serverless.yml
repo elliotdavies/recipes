@@ -10,16 +10,11 @@ functions:
   app:
     handler: index.handler
     events:
-      - http: 
-          path: /
-          method: ANY
-          cors: true
-      - http: 
-          path: '{proxy+}'
-          method: ANY
-          cors: true
+      - http: ANY /
+      - http: 'ANY {proxy+}'
 
 plugins:
+  - serverless-plugin-typescript
   - serverless-offline
 
 custom:
