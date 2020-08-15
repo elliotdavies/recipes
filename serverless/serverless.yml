@@ -12,6 +12,11 @@ functions:
     events:
       - http: ANY /
       - http: 'ANY {proxy+}'
+    environment:
+      PGHOST: ${env:PGHOST}
+      PGDATABASE: ${env:PGDATABASE}
+      PGUSER: ${env:PGUSER}
+      PGPASSWORD: ${env:PGPASSWORD}
 
 plugins:
   - serverless-plugin-typescript
