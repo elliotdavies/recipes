@@ -5,6 +5,9 @@ provider:
   runtime: nodejs12.x
   stage: prod
   region: eu-west-2
+  vpc:
+    securityGroupIds:
+      - sg-09cdfc1f01f29b459
 
 functions:
   app:
