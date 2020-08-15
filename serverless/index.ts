@@ -46,8 +46,11 @@ interface Recipe {
 }
 
 app.get("/", async (req: Request, res: Response<Recipe[]>) => {
+  console.log('Connecting to DB') 
   await pg.connect();
+  console.log('Connected to DB') 
   const queryRes = await pg.query("SELECT * FROM recipes");
+  console.log('Got query result') 
   res.json(queryRes.rows);
 });
 
