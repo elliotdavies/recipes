@@ -24,6 +24,7 @@
     "@types/pg": "^7.14.4",
     "prettier": "^2.0.5",
     "serverless": "^1.78.1",
+    "serverless-domain-manager": "^4.2.0",
     "serverless-offline": "^6.5.0",
     "serverless-plugin-typescript": "^1.1.9",
     "typescript": "^3.9.7"

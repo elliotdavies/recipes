@@ -21,9 +21,15 @@ functions:
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
+  - serverless-domain-manager
 
 custom:
   serverless-offline:
     httpPort: 8000
     noPrependStageInUrl: true
     preserveTrailingSlash: true
+  customDomain:
+    domainName: api.recipes.elliotdavies.co.uk
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
