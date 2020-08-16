@@ -24,6 +24,8 @@ app.disable("x-powered-by");
 app.use(cors());
 app.use(bodyParser.json()); // parse application/json
 
+const isVoid = (x: any): boolean => x === null || typeof x === "undefined";
+
 interface ApiError {
   msg: string;
   error?: Error;
@@ -79,7 +81,7 @@ app.post(
     }
 
     const { url, title, notes, images } = req.body;
-    if (!url || !title || !notes || !images) {
+    if (isVoid(url) || isVoid(title) || isVoid(notes) || isVoid(images)) {
       return res.status(400).json({
         msg: "Missing data needed to create recipe",
       });
@@ -116,7 +118,13 @@ app.put(
     }
 
     const { id, url, title, notes, images } = req.body;
-    if (!url || !title || !notes || !images) {
+    if (
+      isVoid(id) ||
+      isVoid(url) ||
+      isVoid(title) ||
+      isVoid(notes) ||
+      isVoid(images)
+    ) {
       return res.status(400).json({
         msg: "Missing data needed to update recipe",
       });
@@ -157,7 +165,7 @@ app.delete(
     }
 
     const { id } = req.body;
-    if (!id) {
+    if (isVoid(id)) {
       return res.status(400).json({
         msg: "Missing recipe ID",
       });
