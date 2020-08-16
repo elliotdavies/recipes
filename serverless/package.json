@@ -8,7 +8,7 @@
     "deploy": "serverless deploy --verbose",
     "deploy-local": "yarn deploy --aws-profile elliot-laptop",
     "invoke-local": "PGHOST=localhost PGDATABASE=recipes PGUSER=recipes PGPASSWORD=password123 serverless invoke local -f app",
-    "format": "prettier --write index.js"
+    "format": "prettier --write index.ts"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
