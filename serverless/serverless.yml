@@ -11,6 +11,13 @@ provider:
     subnetIds:
       - subnet-042f3170b0b2b2cbe
       - subnet-0b5942aae2cc57e6e
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource: "arn:aws:s3:::recipes.elliotdavies.co.uk/*"
+
 
 functions:
   app:
