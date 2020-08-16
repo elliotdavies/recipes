@@ -12,18 +12,17 @@ import { Request, Response } from "express";
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const multer = require("multer");
+
+const { v4: uuid } = require("uuid");
+
+const aws = require("aws-sdk");
+const s3 = new aws.S3();
 
 const app = express();
 app.disable("x-powered-by");
 app.use(cors());
 app.use(bodyParser.json()); // parse application/json
-
-/**
- * @TODO
- *
- * - Refactor out dev env vars
- * - Add image endpoint
- */
 
 interface ApiError {
   msg: string;
@@ -173,6 +172,47 @@ app.delete(
         error,
       });
     }
+  }
+);
+
+interface ImageUploadResponse {
+  filename: string;
+}
+
+app.post(
+  "/image",
+  multer().single("image"),
+  async (req: Request, res: ResponseWithErr<ImageUploadResponse>) => {
+    if (!req.file) {
+      return res.status(400).json({
+        msg: "No image file found in request",
+      });
+    }
+
+    const { originalname } = req.file;
+    const parts = originalname.split(".");
+    const ext = parts[parts.length - 1];
+    const filename = `images/${uuid()}.${ext}`;
+
+    const params = {
+      Bucket: "recipes.elliotdavies.co.uk",
+      Key: filename,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+    };
+
+    s3.upload(params, (error?: Error) => {
+      if (error) {
+        return res.status(500).json({
+          msg: "Failed to store image",
+          error,
+        });
+      } else {
+        return res.json({
+          filename,
+        });
+      }
+    });
   }
 );
 
