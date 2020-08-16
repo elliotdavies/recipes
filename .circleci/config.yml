@@ -1,8 +1,6 @@
 version: 2.1
 
 orbs:
-  aws-ecr: circleci/aws-ecr@6.2.0
-  aws-ecs: circleci/aws-ecs@0.0.11
   aws-s3: circleci/aws-s3@1.0.16
 
 jobs:
@@ -36,32 +34,24 @@ jobs:
           from: dist
           to: 's3://recipes.elliotdavies.co.uk'
 
+  build-deploy-server:
+    docker:
+      - image: cimg/node:lts
+    working_directory: ~/recipes/serverless
+    steps:
+      - checkout:
+          path: ~/recipes
+      - run:
+          name: Install
+          command: yarn
+      - run:
+          name: Deploy
+          command: yarn deploy
+
 workflows:
   build-deploy-server:
     jobs:
-      - aws-ecr/build-and-push-image:
-          name: build-server
-          account-url: AWS_ECR_ACCOUNT_URL
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          checkout: true
-          create-repo: true
-          dockerfile: server/Dockerfile
-          path: server
-          region: AWS_REGION
-          repo: recipes-server
-          tag: ${CIRCLE_SHA1}
-
-      - aws-ecs/deploy-service-update:
-          requires:
-            - build-server
-          filters:
-            branches:
-              only: master
-          family: 'recipes-server' # Task definition
-          cluster-name: 'recipes'
-          service-name: 'recipes-server'
-          container-image-name-updates: 'container=recipes-server,tag=${CIRCLE_SHA1}'
+      - build-deploy-server
 
   build-deploy-client:
     jobs:

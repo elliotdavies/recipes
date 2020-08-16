@@ -1,0 +1,42 @@
+service: recipes-api
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: prod
+  region: eu-west-2
+  vpc:
+    securityGroupIds:
+      - sg-06925ff8c3aba277c
+    subnetIds:
+      - subnet-042f3170b0b2b2cbe
+      - subnet-0b5942aae2cc57e6e
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource: "arn:aws:s3:::recipes.elliotdavies.co.uk/*"
+
+
+functions:
+  app:
+    handler: index.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+    environment:
+      PGHOST: ${env:PGHOST}
+      PGDATABASE: ${env:PGDATABASE}
+      PGUSER: ${env:PGUSER}
+      PGPASSWORD: ${env:PGPASSWORD}
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 8000
+    noPrependStageInUrl: true
+    preserveTrailingSlash: true
