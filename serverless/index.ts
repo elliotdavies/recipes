@@ -214,13 +214,17 @@ app.post(
 
     try {
       await s3.upload(params).promise();
+      console.log('success')
       return res.json({ filename });
     } catch (error) {
+      console.log('error', error)
       return res.status(500).json({
         msg: "Failed to store image",
         error,
       });
     }
+
+    console.log('done')
   }
 );
 
