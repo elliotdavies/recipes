@@ -200,27 +200,24 @@ app.post(
     const { originalname } = req.file;
     const parts = originalname.split(".");
     const ext = parts[parts.length - 1];
-    const filename = `images/${uuid()}.${ext}`;
+    const filename = `${uuid()}.${ext}`;
 
     const params = {
       Bucket: "recipes.elliotdavies.co.uk",
-      Key: filename,
+      Key: `images/${filename}`,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,
     };
 
-    s3.upload(params, (error?: Error) => {
-      if (error) {
-        return res.status(500).json({
-          msg: "Failed to store image",
-          error,
-        });
-      } else {
-        return res.json({
-          filename,
-        });
-      }
-    });
+    try {
+      await s3.upload(params).promise();
+      return res.json({ filename });
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to store image",
+        error,
+      });
+    }
   }
 );
 
