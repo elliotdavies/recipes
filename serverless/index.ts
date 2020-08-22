@@ -17,6 +17,7 @@ const multer = require("multer");
 const { v4: uuid } = require("uuid");
 
 const aws = require("aws-sdk");
+aws.config.logger = console;
 const s3 = new aws.S3();
 
 const app = express();
