@@ -17,7 +17,6 @@ const multer = require("multer");
 const { v4: uuid } = require("uuid");
 
 const aws = require("aws-sdk");
-aws.config.logger = console;
 const s3 = new aws.S3();
 
 const app = express();
@@ -201,30 +200,24 @@ app.post(
     const { originalname } = req.file;
     const parts = originalname.split(".");
     const ext = parts[parts.length - 1];
-    const filename = `images/${uuid()}.${ext}`;
+    const filename = `${uuid()}.${ext}`;
 
     const params = {
       Bucket: "recipes.elliotdavies.co.uk",
-      Key: filename,
+      Key: `images/${filename}`,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,
     };
 
-    console.log(params);
-
     try {
       await s3.upload(params).promise();
-      console.log('success')
       return res.json({ filename });
     } catch (error) {
-      console.log('error', error)
       return res.status(500).json({
         msg: "Failed to store image",
         error,
       });
     }
-
-    console.log('done')
   }
 );
 
