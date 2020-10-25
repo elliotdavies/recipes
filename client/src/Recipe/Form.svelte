@@ -133,7 +133,7 @@ fieldset {
       <input
         name="file"
         type="file"
-        accept="image/*"
+        accept="image/*, application/pdf"
         enctype="multipart/form-data"
         bind:value={state.selectedImage}
         on:change={imageInputOnChange}
