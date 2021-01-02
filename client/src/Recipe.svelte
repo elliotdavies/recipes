@@ -97,6 +97,27 @@ section {
 .images h2 {
   margin: 0 0 10px 0;
 }
+
+.images-preview {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.image {
+  flex-shrink: 0;
+  background-color: lightgrey;
+  height: 200px;
+  margin-right: 20px;
+}
+.image img {
+  max-height: 100%;
+  max-width: 100%;
+}
+
 .notes .notes-preview {
   white-space: pre-wrap;
   margin-bottom: 10px;
@@ -123,17 +144,17 @@ section {
 
     <section class="images">
       <h2>Images</h2>
-      <div class="images-preview">
-        <ul>
-          {#each state.recipe.images as filename}
-            <li class="image">
-              <a href={`//recipes.elliotdavies.co.uk/images/${filename}`}>{filename}</a>
-            </li>
-          {:else}
-            <small>No images yet...</small>
-          {/each}
-        </ul>
-      </div>
+      <ul class="images-preview">
+        {#each state.recipe.images as filename}
+          <li class="image">
+            <a href={`//recipes.elliotdavies.co.uk/images/${filename}`}>
+              <img src={`//recipes.elliotdavies.co.uk/images/${filename}`} alt="" />
+            </a>
+          </li>
+        {:else}
+          <small>No images yet...</small>
+        {/each}
+      </ul>
     </section>
 
     <section class="notes">
