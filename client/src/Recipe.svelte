@@ -137,11 +137,14 @@ section {
       <h1>{state.recipe.title}</h1>
       <small>{state.recipe.url}</small>
 
-      <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
-        <p>Go to recipe</p>
-      </a>
+      {#if state.recipe.url}
+        <a href={toFullUrl(state.recipe.url)} target="_blank" rel="noopener">
+          <p>Go to recipe</p>
+        </a>
+      {/if}
     </section>
 
+    {#if state.recipe.images.length > 0}
     <section class="images">
       <h2>Images</h2>
       <ul class="images-preview">
@@ -151,16 +154,17 @@ section {
               <img src={`//recipes.elliotdavies.co.uk/images/${filename}`} alt="" />
             </a>
           </li>
-        {:else}
-          <small>No images yet...</small>
         {/each}
       </ul>
     </section>
+    {/if}
 
+    {#if state.recipe.notes.length > 0}
     <section class="notes">
       <h2>Notes</h2>
       <div class="notes-preview">{state.recipe.notes}</div>
     </section>
+    {/if}
 
     <section class="actions">
       <button type="button" on:click={onEdit}>Edit</button>
