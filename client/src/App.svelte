@@ -2,7 +2,8 @@
   import { Router, Route } from 'svelte-routing';
 
   import { getRecipes } from "./api";
-  import { recipes } from "./store";
+  import { getSessionId } from "./utils";
+  import { recipes, sessionId } from "./store";
 
   import Header from "./Header.svelte";
   import Home from "./Home.svelte";
@@ -12,7 +13,10 @@
 
   let url = "";
 
-  getRecipes()
+  const session_id = getSessionId()
+  sessionId.set(session_id);
+
+  getRecipes(session_id)
     .then(rs => {
       recipes.set(rs);
     });

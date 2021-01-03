@@ -1,10 +1,18 @@
 <script>
+  import { sessionId } from './store'
   import { loginWithGoogle, logout } from './api';
+  import { setSessionId, unsetSessionId } from './utils'
 
-  const sessionIdKey = 'recipes/session_id';
+  let state = {
+    sessionId: null
+  }
+
+  sessionId.subscribe(id => {
+    state.sessionId = id;
+  })
 
   window.onSignIn = googleUser => {
-    if (localStorage.getItem(sessionIdKey) !== null) {
+    if (state.sessionId !== null) {
       return
     }
 
@@ -14,8 +22,8 @@
 
     loginWithGoogle(email, name)
       .then(session_id => {
-        console.log('session_id', session_id)
-        localStorage.setItem(sessionIdKey, session_id)
+        sessionId.set(session_id);
+        setSessionId(session_id)
       })
       .catch(e => {
         console.error(e);
@@ -25,8 +33,9 @@
   const signOut = () => {
     const auth2 = gapi.auth2.getAuthInstance();
     auth2.signOut().then(function () {
-      localStorage.removeItem(sessionIdKey);
-      logout()
+      logout(state.sessionId);
+      sessionId.set(null);
+      unsetSessionId();
     });
   }
 </script>
@@ -34,5 +43,8 @@
 <style>
 </style>
 
+{#if !state.sessionId}
 <div class="g-signin2" data-onsuccess="onSignIn"></div>
+{:else}
 <button on:click={signOut}>Sign out</button>
+{/if}

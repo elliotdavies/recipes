@@ -47,6 +47,16 @@ interface Recipe {
 }
 
 app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
+  const session_id = extractSessionId(req);
+  try {
+    await checkAuthValid(session_id);
+  } catch (error) {
+    return res.status(403).json({
+      msg: "Invalid session",
+      error,
+    });
+  }
+
   try {
     await pg.connect();
   } catch (error) {
@@ -75,6 +85,16 @@ app.post(
     req: RequestWithBody<CreateRecipeBody>,
     res: ResponseWithErr<Recipe>
   ) => {
+    const session_id = extractSessionId(req);
+    try {
+      await checkAuthValid(session_id);
+    } catch (error) {
+      return res.status(403).json({
+        msg: "Invalid session",
+        error,
+      });
+    }
+
     try {
       await pg.connect();
     } catch (error) {
@@ -112,6 +132,16 @@ app.post(
 app.put(
   "/",
   async (req: RequestWithBody<Recipe>, res: ResponseWithErr<void>) => {
+    const session_id = extractSessionId(req);
+    try {
+      await checkAuthValid(session_id);
+    } catch (error) {
+      return res.status(403).json({
+        msg: "Invalid session",
+        error,
+      });
+    }
+
     try {
       await pg.connect();
     } catch (error) {
@@ -159,6 +189,16 @@ app.delete(
     req: RequestWithBody<DeleteRecipeBody>,
     res: ResponseWithErr<void>
   ) => {
+    const session_id = extractSessionId(req);
+    try {
+      await checkAuthValid(session_id);
+    } catch (error) {
+      return res.status(403).json({
+        msg: "Invalid session",
+        error,
+      });
+    }
+
     try {
       await pg.connect();
     } catch (error) {
@@ -195,6 +235,16 @@ app.post(
   "/image",
   multer().single("image"),
   async (req: Request, res: ResponseWithErr<ImageUploadResponse>) => {
+    const session_id = extractSessionId(req);
+    try {
+      await checkAuthValid(session_id);
+    } catch (error) {
+      return res.status(403).json({
+        msg: "Invalid session",
+        error,
+      });
+    }
+
     if (!req.file) {
       return res.status(400).json({
         msg: "No image file found in request",
@@ -238,6 +288,44 @@ interface Session {
   user_email: number;
   session_id: string;
 }
+
+const extractSessionId = (req: Request): string | null => {
+  if (req.headers.authorization) {
+    const parts = req.headers.authorization.split(" ");
+    if (parts.length === 2 && parts[0] === "Bearer") {
+      return parts[1];
+    }
+  }
+
+  return null;
+};
+
+const checkAuthValid = async (session_id: string | null): Promise<void> => {
+  if (!session_id) {
+    throw new Error("Null session_id");
+  }
+
+  try {
+    await pg.connect();
+  } catch (error) {
+    throw new Error("Error connecting to DB");
+  }
+
+  let session = null;
+  try {
+    const sessionRes = await pg.query(
+      "SELECT * FROM sessions WHERE session_id = $1",
+      [session_id]
+    );
+    session = sessionRes.rows[0];
+  } catch (error) {
+    throw new Error("Failed to query for session");
+  }
+
+  if (!session) {
+    throw new Error("Invalid session");
+  }
+};
 
 interface LoginBody {
   email: string;
@@ -306,29 +394,38 @@ app.post(
   }
 );
 
-app.post( "/logout", async ( req: Request, res: Response) => {
-    try {
-      await pg.connect();
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Error connecting to DB",
-        error,
-      });
-    }
-
-    try {
-      const sessionRes = await pg.query(
-        "DELETE FROM sessions WHERE session_id = $1",
-        [session_id]
-      );
-      res.status(200);
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Failed to delete session",
-        error,
-      });
-    }
+app.post("/logout", async (req: Request, res: Response) => {
+  const session_id = extractSessionId(req);
+  try {
+    await checkAuthValid(session_id);
+  } catch (error) {
+    return res.status(403).json({
+      msg: "Invalid session",
+      error,
+    });
   }
-);
+
+  try {
+    await pg.connect();
+  } catch (error) {
+    return res.status(500).json({
+      msg: "Error connecting to DB",
+      error,
+    });
+  }
+
+  try {
+    const sessionRes = await pg.query(
+      "DELETE FROM sessions WHERE session_id = $1",
+      [session_id]
+    );
+    res.status(200);
+  } catch (error) {
+    return res.status(500).json({
+      msg: "Failed to delete session",
+      error,
+    });
+  }
+});
 
 module.exports.handler = serverless(app);
