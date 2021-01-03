@@ -34,6 +34,10 @@ interface ApiError {
 type RequestWithBody<T> = Request<any, any, T>;
 type ResponseWithErr<T> = Response<T | ApiError>;
 
+/**
+ * Recipes
+ */
+
 interface Recipe {
   id: number;
   url: string;
@@ -215,6 +219,112 @@ app.post(
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to store image",
+        error,
+      });
+    }
+  }
+);
+
+/**
+ * Users and sessions
+ */
+
+interface User {
+  email: string;
+  name?: string;
+}
+
+interface Session {
+  user_email: number;
+  session_id: string;
+}
+
+interface LoginBody {
+  email: string;
+  name?: string;
+}
+
+interface LoginResponse {
+  session_id: string;
+}
+
+app.post(
+  "/login/google",
+  async (
+    req: RequestWithBody<LoginBody>,
+    res: ResponseWithErr<LoginResponse>
+  ) => {
+    try {
+      await pg.connect();
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Error connecting to DB",
+        error,
+      });
+    }
+
+    const { email, name } = req.body;
+    if (isVoid(email)) {
+      return res.status(400).json({
+        msg: "Missing email in login request",
+      });
+    }
+
+    try {
+      const existingUserRes = await pg.query(
+        "SELECT * FROM users WHERE email = $1",
+        [email]
+      );
+      const existingUser = existingUserRes.rows[0];
+
+      if (!existingUser) {
+        await pg.query("INSERT INTO users (email, name) VALUES ($1, $2)", [
+          email,
+          name,
+        ]);
+      }
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to retrieve or create user",
+        error,
+      });
+    }
+
+    try {
+      const session_id = uuid();
+      const sessionRes = await pg.query(
+        "INSERT INTO sessions (user_email, session_id) VALUES ($1, $2)",
+        [email, session_id]
+      );
+      res.status(200).json({ session_id });
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to generate session",
+        error,
+      });
+    }
+  }
+);
+
+app.post( "/logout", async ( req: Request, res: Response) => {
+    try {
+      await pg.connect();
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Error connecting to DB",
+        error,
+      });
+    }
+
+    try {
+      const sessionRes = await pg.query(
+        "DELETE FROM sessions WHERE session_id = $1",
+        [session_id]
+      );
+      res.status(200);
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to delete session",
         error,
       });
     }

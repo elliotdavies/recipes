@@ -50,3 +50,30 @@ export const postImage = formData =>
     if (res.status !== 200) throw new Error(res);
     else return res.json();
   }).then(json => json.filename);
+
+export const loginWithGoogle = (email, name) =>
+  fetch(`${apiUrl}/login/google`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, name })
+  }).then(res => {
+    if (res.status !== 200) {
+      res.text().then(err => {
+        throw new Error(err);
+      })
+    }
+    else return res.json();
+  }).then(json => json.session_id);
+
+export const logout = () =>
+  fetch(`${apiUrl}/logout`, {
+    method: 'POST',
+  }).then(res => {
+    if (res.status !== 200) {
+      res.text().then(err => {
+        throw new Error(err);
+      })
+    }
+  })

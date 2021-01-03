@@ -8,6 +8,7 @@
   import Home from "./Home.svelte";
   import Recipe from "./Recipe.svelte";
   import Submit from "./Submit.svelte";
+  import Login from "./Login.svelte";
 
   let url = "";
 
@@ -30,6 +31,10 @@
   <main>
     <Route path="/">
       <Home />
+    </Route>
+
+    <Route path="/login">
+      <Login />
     </Route>
 
     <Route path="/submit">
