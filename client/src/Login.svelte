@@ -17,12 +17,9 @@
       return
     }
 
-    const profile = googleUser.getBasicProfile();
-    const email = profile.getEmail();
-    const name = profile.getName();
-
-    loginWithGoogle(email, name)
-      .then(session_id => {
+    const id_token = googleUser.getAuthResponse().id_token;
+    loginWithGoogle(id_token)
+      .then(({ session_id }) => {
         sessionId.set(session_id);
         setSessionId(session_id);
         navigate("/");

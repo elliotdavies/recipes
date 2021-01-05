@@ -61,13 +61,13 @@ export const postImage = (session_id, formData) =>
     else return res.json();
   }).then(json => json.filename);
 
-export const loginWithGoogle = (email, name) =>
+export const loginWithGoogle = (id_token, email, name) =>
   fetch(`${apiUrl}/login/google`, {
     method: 'POST',
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ email, name })
+    body: JSON.stringify({ id_token })
   }).then(res => {
     if (res.status !== 200) {
       res.text().then(err => {
@@ -75,7 +75,7 @@ export const loginWithGoogle = (email, name) =>
       })
     }
     else return res.json();
-  }).then(json => json.session_id);
+  });
 
 export const logout = (session_id) =>
   fetch(`${apiUrl}/logout`, {

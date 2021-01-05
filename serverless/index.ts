@@ -5,6 +5,11 @@
  */
 const serverless = require("serverless-http");
 
+const GOOGLE_CLIENT_ID =
+  "903217229000-ughnh1ecf7vr73qdbsu1imbiq7hn5mjk.apps.googleusercontent.com";
+const { OAuth2Client } = require("google-auth-library");
+const googleOAuthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 const { Pool } = require("pg");
 const pg = new Pool();
 
@@ -328,12 +333,13 @@ const checkAuthValid = async (session_id: string | null): Promise<void> => {
 };
 
 interface LoginBody {
-  email: string;
-  name?: string;
+  id_token: string;
 }
 
 interface LoginResponse {
   session_id: string;
+  email: string;
+  name: string;
 }
 
 app.post(
@@ -351,10 +357,26 @@ app.post(
       });
     }
 
-    const { email, name } = req.body;
-    if (isVoid(email)) {
+    const { id_token } = req.body;
+    if (isVoid(id_token)) {
       return res.status(400).json({
-        msg: "Missing email in login request",
+        msg: "Missing Google id_token in login request",
+      });
+    }
+
+    let email, name;
+    try {
+      const ticket = await googleOAuthClient.verifyIdToken({
+        idToken: id_token,
+        audience: GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email = payload.email;
+      name = payload.given_name + " " + payload.family_name;
+    } catch (error) {
+      return res.status(403).json({
+        msg: "Invalid Google auth token",
+        error,
       });
     }
 
@@ -384,7 +406,7 @@ app.post(
         "INSERT INTO sessions (user_email, session_id) VALUES ($1, $2)",
         [email, session_id]
       );
-      res.status(200).json({ session_id });
+      res.status(200).json({ session_id, email, name });
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to generate session",
@@ -405,7 +427,6 @@ app.post("/logout", async (req: Request, res: Response) => {
     });
   }
 
-
   try {
     await pg.connect();
   } catch (error) {
@@ -414,7 +435,6 @@ app.post("/logout", async (req: Request, res: Response) => {
       error,
     });
   }
-
 
   try {
     const sessionRes = await pg.query(
