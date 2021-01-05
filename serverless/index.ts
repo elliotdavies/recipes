@@ -53,8 +53,9 @@ interface Recipe {
 
 app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
   const session_id = extractSessionId(req);
+  let user_id;
   try {
-    await checkAuthValid(session_id);
+    user_id = await getUserIdFromValidSession(session_id);
   } catch (error) {
     return res.status(403).json({
       msg: "Invalid session",
@@ -72,8 +73,19 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
   }
 
   try {
-    const queryRes = await pg.query("SELECT * FROM recipes");
-    return res.json(queryRes.rows);
+    const queryRes = await pg.query(
+      "SELECT * FROM recipes WHERE user_id = $1",
+      [user_id]
+    );
+    return res.json(
+      queryRes.rows.map((row: Recipe) => ({
+        id: row.id,
+        url: row.url,
+        title: row.title,
+        notes: row.notes,
+        images: row.images,
+      }))
+    );
   } catch (error) {
     return res.status(500).json({
       msg: "Error querying DB",
@@ -91,8 +103,9 @@ app.post(
     res: ResponseWithErr<Recipe>
   ) => {
     const session_id = extractSessionId(req);
+    let user_id;
     try {
-      await checkAuthValid(session_id);
+      user_id = await getUserIdFromValidSession(session_id);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -118,8 +131,8 @@ app.post(
 
     try {
       const queryRes = await pg.query(
-        "INSERT INTO recipes (url, title, notes, images) VALUES ($1, $2, $3, $4) RETURNING id",
-        [url, title, notes, images]
+        "INSERT INTO recipes (url, title, notes, images, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+        [url, title, notes, images, user_id]
       );
 
       res
@@ -138,8 +151,9 @@ app.put(
   "/",
   async (req: RequestWithBody<Recipe>, res: ResponseWithErr<void>) => {
     const session_id = extractSessionId(req);
+    let user_id;
     try {
-      await checkAuthValid(session_id);
+      user_id = await getUserIdFromValidSession(session_id);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -170,6 +184,16 @@ app.put(
     }
 
     try {
+      const recipeRes = await pg.query("SELECT * FROM recipes WHERE id = $1", [
+        id,
+      ]);
+      const recipe = recipeRes.rows[0];
+      if (recipe.user_id !== user_id) {
+        return res.status(403).json({
+          msg: "Not authorized to edit this recipe",
+        });
+      }
+
       await pg.query(
         "UPDATE recipes SET url = $1, title = $2, notes = $3, images = $4 WHERE id = $5",
         [url, title, notes, images, id]
@@ -195,8 +219,9 @@ app.delete(
     res: ResponseWithErr<void>
   ) => {
     const session_id = extractSessionId(req);
+    let user_id;
     try {
-      await checkAuthValid(session_id);
+      user_id = await getUserIdFromValidSession(session_id);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -221,6 +246,16 @@ app.delete(
     }
 
     try {
+      const recipeRes = await pg.query("SELECT * FROM recipes WHERE id = $1", [
+        id,
+      ]);
+      const recipe = recipeRes.rows[0];
+      if (recipe.user_id !== user_id) {
+        return res.status(403).json({
+          msg: "Not authorized to delete this recipe",
+        });
+      }
+
       await pg.query("DELETE FROM recipes WHERE id = $1", [id]);
       return res.sendStatus(204);
     } catch (error) {
@@ -242,7 +277,7 @@ app.post(
   async (req: Request, res: ResponseWithErr<ImageUploadResponse>) => {
     const session_id = extractSessionId(req);
     try {
-      await checkAuthValid(session_id);
+      await getUserIdFromValidSession(session_id);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -305,7 +340,9 @@ const extractSessionId = (req: Request): string | null => {
   return null;
 };
 
-const checkAuthValid = async (session_id: string | null): Promise<void> => {
+const getUserIdFromValidSession = async (
+  session_id: string | null
+): Promise<string> => {
   if (!session_id) {
     throw new Error("Null session_id");
   }
@@ -330,6 +367,8 @@ const checkAuthValid = async (session_id: string | null): Promise<void> => {
   if (!session) {
     throw new Error("Invalid session");
   }
+
+  return session.user_id;
 };
 
 interface LoginBody {
@@ -374,13 +413,12 @@ app.post(
       const payload = ticket.getPayload();
 
       if (payload.aud !== GOOGLE_CLIENT_ID) {
-        throw new Error("aud does not match app client ID")
+        throw new Error("aud does not match app client ID");
       }
 
       email = payload.email;
       name = payload.given_name + " " + payload.family_name;
       google_id = payload.sub;
-
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid Google auth token",
@@ -401,16 +439,15 @@ app.post(
       } else {
         user_id = uuid();
 
-        await pg.query("INSERT INTO users (id, email, name) VALUES ($1, $2, $3)", [
-          user_id,
-          email,
-          name,
-        ]);
+        await pg.query(
+          "INSERT INTO users (id, email, name) VALUES ($1, $2, $3)",
+          [user_id, email, name]
+        );
 
-        await pg.query("INSERT INTO users_google (user_id, google_id) VALUES ($1, $2)", [
-          user_id,
-          google_id,
-        ]);
+        await pg.query(
+          "INSERT INTO users_google (user_id, google_id) VALUES ($1, $2)",
+          [user_id, google_id]
+        );
       }
     } catch (error) {
       return res.status(500).json({
@@ -438,7 +475,7 @@ app.post(
 app.post("/logout", async (req: Request, res: Response) => {
   const session_id = extractSessionId(req);
   try {
-    await checkAuthValid(session_id);
+    await getUserIdFromValidSession(session_id);
   } catch (error) {
     return res.status(403).json({
       msg: "Invalid session",
