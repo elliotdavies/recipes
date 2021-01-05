@@ -364,15 +364,23 @@ app.post(
       });
     }
 
-    let email, name;
+    let email, name, google_id;
+
     try {
       const ticket = await googleOAuthClient.verifyIdToken({
         idToken: id_token,
         audience: GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
+
+      if (payload.aud !== GOOGLE_CLIENT_ID) {
+        throw new Error("aud does not match app client ID")
+      }
+
       email = payload.email;
       name = payload.given_name + " " + payload.family_name;
+      google_id = payload.sub;
+
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid Google auth token",
@@ -380,17 +388,28 @@ app.post(
       });
     }
 
+    let user_id;
     try {
-      const existingUserRes = await pg.query(
-        "SELECT * FROM users WHERE email = $1",
-        [email]
+      const existingGoogleUserRes = await pg.query(
+        "SELECT * FROM users_google WHERE google_id = $1",
+        [google_id]
       );
-      const existingUser = existingUserRes.rows[0];
+      const existingGoogleUser = existingGoogleUserRes.rows[0];
 
-      if (!existingUser) {
-        await pg.query("INSERT INTO users (email, name) VALUES ($1, $2)", [
+      if (existingGoogleUser) {
+        user_id = existingGoogleUser.user_id;
+      } else {
+        user_id = uuid();
+
+        await pg.query("INSERT INTO users (id, email, name) VALUES ($1, $2, $3)", [
+          user_id,
           email,
           name,
+        ]);
+
+        await pg.query("INSERT INTO users_google (user_id, google_id) VALUES ($1, $2)", [
+          user_id,
+          google_id,
         ]);
       }
     } catch (error) {
@@ -403,8 +422,8 @@ app.post(
     try {
       const session_id = uuid();
       const sessionRes = await pg.query(
-        "INSERT INTO sessions (user_email, session_id) VALUES ($1, $2)",
-        [email, session_id]
+        "INSERT INTO sessions (user_id, session_id) VALUES ($1, $2)",
+        [user_id, session_id]
       );
       res.status(200).json({ session_id, email, name });
     } catch (error) {
