@@ -1,5 +1,5 @@
 <script>
-  import { Router, Route } from 'svelte-routing';
+  import { Router, Route, navigate } from 'svelte-routing';
 
   import { getRecipes } from "./api";
   import { getSessionId } from "./utils";
@@ -16,10 +16,14 @@
   const session_id = getSessionId()
   sessionId.set(session_id);
 
-  getRecipes(session_id)
-    .then(rs => {
-      recipes.set(rs);
-    });
+  if (session_id) {
+    getRecipes(session_id)
+      .then(rs => {
+        recipes.set(rs);
+      });
+  } else {
+    navigate("/login")
+  }
 </script>
 
 <style>

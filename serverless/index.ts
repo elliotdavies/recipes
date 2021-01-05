@@ -405,6 +405,7 @@ app.post("/logout", async (req: Request, res: Response) => {
     });
   }
 
+
   try {
     await pg.connect();
   } catch (error) {
@@ -414,12 +415,13 @@ app.post("/logout", async (req: Request, res: Response) => {
     });
   }
 
+
   try {
     const sessionRes = await pg.query(
       "DELETE FROM sessions WHERE session_id = $1",
       [session_id]
     );
-    res.status(200);
+    return res.sendStatus(200);
   } catch (error) {
     return res.status(500).json({
       msg: "Failed to delete session",
