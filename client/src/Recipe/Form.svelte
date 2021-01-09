@@ -1,6 +1,5 @@
 <script>
   import { postImage } from '../api'
-  import { sessionId } from '../store'
 
   export let recipe = {
     url: "",
@@ -13,17 +12,12 @@
   export let onCancel;
 
   let state = {
-    sessionId: null,
     recipe,
     selectedImage: null,
     imageRequest: {
       status: "notAsked"
     }
   }
-
-  sessionId.subscribe(id => {
-   state.sessionId = id;
-  })
 
   const imageInputOnChange = e => {
     e.preventDefault();
@@ -39,7 +33,7 @@
     const formData = new FormData();
     formData.append('image', state.selectedImage);
 
-    postImage(state.sessionId, formData)
+    postImage(formData)
       .then(filename => {
         state.recipe.images.push(filename);
         state.imageRequest = {

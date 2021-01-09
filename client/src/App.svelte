@@ -1,29 +1,20 @@
 <script>
-  import { Router, Route, navigate } from 'svelte-routing';
+  import { Router, Route } from 'svelte-routing';
 
   import { getRecipes } from "./api";
-  import { getSessionId } from "./utils";
-  import { recipes, sessionId } from "./store";
+  import { recipes } from "./store";
 
   import Header from "./Header.svelte";
   import Home from "./Home.svelte";
   import Recipe from "./Recipe.svelte";
   import Submit from "./Submit.svelte";
-  import Login from "./Login.svelte";
 
   let url = "";
 
-  const session_id = getSessionId()
-  sessionId.set(session_id);
-
-  if (session_id) {
-    getRecipes(session_id)
-      .then(rs => {
-        recipes.set(rs);
-      });
-  } else {
-    navigate("/login")
-  }
+  getRecipes()
+    .then(rs => {
+      recipes.set(rs);
+    });
 </script>
 
 <style>
@@ -39,10 +30,6 @@
   <main>
     <Route path="/">
       <Home />
-    </Route>
-
-    <Route path="/login">
-      <Login />
     </Route>
 
     <Route path="/submit">

@@ -1,20 +1,15 @@
 const apiUrl = __API_URL__;
 
-export const getRecipes = (session_id) =>
-  fetch(apiUrl, {
-    headers: {
-      'Authorization': `Bearer ${session_id}`
-    }
-  }).then(res => {
+export const getRecipes = () =>
+  fetch(apiUrl).then(res => {
     if (res.status !== 200) throw new Error(res);
     else return res.json();
   });
 
-export const submitRecipe = (session_id, url, title, notes, images) =>
+export const submitRecipe = (url, title, notes, images) =>
   fetch(apiUrl, {
     method: "POST",
     headers: {
-      'Authorization': `Bearer ${session_id}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ url, title, notes, images })
@@ -23,11 +18,10 @@ export const submitRecipe = (session_id, url, title, notes, images) =>
     else return res.json();
   });
 
-export const updateRecipe = (session_id, id, url, title, notes, images) =>
+export const updateRecipe = (id, url, title, notes, images) =>
   fetch(apiUrl, {
     method: "PUT",
     headers: {
-      'Authorization': `Bearer ${session_id}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ id, url, title, notes, images })
@@ -36,11 +30,10 @@ export const updateRecipe = (session_id, id, url, title, notes, images) =>
     else return res;
   });
 
-export const deleteRecipe = (session_id, id) =>
+export const deleteRecipe = id =>
   fetch(apiUrl, {
     method: "DELETE",
     headers: {
-      'Authorization': `Bearer ${session_id}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ id })
@@ -49,44 +42,11 @@ export const deleteRecipe = (session_id, id) =>
     else return res;
   });
 
-export const postImage = (session_id, formData) =>
+export const postImage = formData =>
   fetch(`${apiUrl}/image`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${session_id}`,
-    },
     body: formData
   }).then(res => {
     if (res.status !== 200) throw new Error(res);
     else return res.json();
   }).then(json => json.filename);
-
-export const loginWithGoogle = (id_token, email, name) =>
-  fetch(`${apiUrl}/login/google`, {
-    method: 'POST',
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ id_token })
-  }).then(res => {
-    if (res.status !== 200) {
-      res.text().then(err => {
-        throw new Error(err);
-      })
-    }
-    else return res.json();
-  });
-
-export const logout = (session_id) =>
-  fetch(`${apiUrl}/logout`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${session_id}`,
-    }
-  }).then(res => {
-    if (res.status !== 200) {
-      res.text().then(err => {
-        throw new Error(err);
-      })
-    }
-  })

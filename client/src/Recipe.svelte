@@ -2,7 +2,7 @@
   import { navigate } from "svelte-routing";
 
   import { toFullUrl } from './utils';
-  import { recipes, sessionId } from "./store";
+  import { recipes } from "./store";
   import { updateRecipe, deleteRecipe } from "./api"
 
   import Form from './Recipe/Form.svelte'
@@ -10,17 +10,12 @@
   export let id;
 
   let state = {
-    sessionId: null,
     recipe: null,
     editing: false,
     request: {
       status: "notAsked"
     }
   };
-
-  sessionId.subscribe(id => {
-    state.sessionId = id;
-  })
 
   recipes.subscribe(rs => {
     const match = rs.find(r => r.id == id);
@@ -34,7 +29,7 @@
   const onSave = recipe => {
     const { url, title, notes, images } = recipe;
 
-    updateRecipe(state.sessionId, state.recipe.id, url, title, notes, images)
+    updateRecipe(state.recipe.id, url, title, notes, images)
       .then(() => {
         recipes.update(rs =>
           rs.map(r => r.id === id ? { ...r, recipe } : r));
@@ -65,7 +60,7 @@
 
     const { id } = state.recipe;
 
-    deleteRecipe(state.sessionId, id)
+    deleteRecipe(id)
       .then(() => {
         recipes.update(rs => rs.filter(r => r.id !== id));
         state.request = {

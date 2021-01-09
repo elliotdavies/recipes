@@ -2,8 +2,7 @@ const { DefinePlugin } = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const config = {
-  apiUrl: "http://localhost:8000",
-  googleClientId: "903217229000-ughnh1ecf7vr73qdbsu1imbiq7hn5mjk.apps.googleusercontent.com",
+  apiUrl: "http://localhost:8000"
 };
 
 module.exports = {
@@ -54,8 +53,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "index.html",
       templateParameters: {
-        apiUrl: config.apiUrl,
-        googleClientId: config.googleClientId,
+        apiUrl: config.apiUrl
       }
     })
   ]
