@@ -7,8 +7,6 @@ const serverless = require("serverless-http");
 
 const GOOGLE_CLIENT_ID =
   "903217229000-ughnh1ecf7vr73qdbsu1imbiq7hn5mjk.apps.googleusercontent.com";
-const { OAuth2Client } = require("google-auth-library");
-const googleOAuthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const { Pool } = require("pg");
 const pg = new Pool();
@@ -23,6 +21,7 @@ const { v4: uuid } = require("uuid");
 
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
+const lambda = new aws.Lambda({ region: "eu-west-2" });
 
 const app = express();
 app.disable("x-powered-by");
@@ -406,19 +405,21 @@ app.post(
     let email, name, google_id;
 
     try {
-      const ticket = await googleOAuthClient.verifyIdToken({
-        idToken: id_token,
-        audience: GOOGLE_CLIENT_ID,
-      });
-      const payload = ticket.getPayload();
+      const googleAuthPayload = await lambda
+        .invoke({
+          FunctionName: "recipes-app-auth-proxy",
+          InvocationType: "RequestResponse",
+          Payload: JSON.stringify({ id_token }),
+        })
+        .promise();
 
-      if (payload.aud !== GOOGLE_CLIENT_ID) {
+      if (googleAuthPayload.aud !== GOOGLE_CLIENT_ID) {
         throw new Error("aud does not match app client ID");
       }
 
-      email = payload.email;
-      name = payload.given_name + " " + payload.family_name;
-      google_id = payload.sub;
+      email = googleAuthPayload.email;
+      name = googleAuthPayload.given_name + " " + googleAuthPayload.family_name;
+      google_id = googleAuthPayload.sub;
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid Google auth token",
