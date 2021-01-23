@@ -7,7 +7,8 @@ const TerserJSPlugin = require("terser-webpack-plugin");
 const path = require("path");
 
 const config = {
-  apiUrl: "//api.recipes.elliotdavies.co.uk"
+  apiUrl: "//api.recipes.elliotdavies.co.uk",
+  googleClientId: "903217229000-ughnh1ecf7vr73qdbsu1imbiq7hn5mjk.apps.googleusercontent.com",
 };
 
 module.exports = {
@@ -61,7 +62,8 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "index.html",
       templateParameters: {
-        apiUrl: config.apiUrl
+        apiUrl: config.apiUrl,
+        googleClientId: config.googleClientId,
       },
       favicon: "assets/favicon.png"
     }),

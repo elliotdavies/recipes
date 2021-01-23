@@ -2,18 +2,23 @@
   import { link, navigate } from 'svelte-routing';
 
   import { submitRecipe } from "./api";
-  import { recipes } from "./store";
+  import { recipes, sessionId } from "./store";
   import Form from './Recipe/Form.svelte'
 
   let state = {
+    sessionId: null,
     status: "notAsked",
     recipe: undefined
   };
 
+  sessionId.subscribe(id => {
+    state.sessionId = id;
+  });
+
   const onSave = recipe => {
     const { url, title, notes, images } = recipe;
 
-    submitRecipe(url, title, notes, images)
+    submitRecipe(state.sessionId, url, title, notes, images)
       .then(recipe => {
         state = {
           status: "success"
