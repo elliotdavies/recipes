@@ -405,6 +405,7 @@ app.post(
     let email, name, google_id;
 
     try {
+      console.log('Calling recipes-app-auth-proxy with id_token: ' + id_token)
       const googleAuthPayload = await lambda
         .invoke({
           FunctionName: "recipes-app-auth-proxy",
@@ -412,6 +413,8 @@ app.post(
           Payload: JSON.stringify({ id_token }),
         })
         .promise();
+
+      console.log('recipes-app-auth-proxy returned: ' + JSON.stringify(googleAuthPayload))
 
       if (googleAuthPayload.aud !== GOOGLE_CLIENT_ID) {
         throw new Error("aud does not match app client ID");
