@@ -9,7 +9,7 @@
   import Home from "./Home.svelte";
   import Recipe from "./Recipe.svelte";
   import Submit from "./Submit.svelte";
-  import Login from "./Login.svelte";
+  import Auth from "./Auth.svelte";
 
   let url = "";
 
@@ -22,7 +22,7 @@
         recipes.set(rs);
       });
   } else {
-    navigate("/login")
+    navigate("/auth")
   }
 </script>
 
@@ -41,8 +41,8 @@
       <Home />
     </Route>
 
-    <Route path="/login">
-      <Login />
+    <Route path="/auth">
+      <Auth />
     </Route>
 
     <Route path="/submit">

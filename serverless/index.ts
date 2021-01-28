@@ -5,9 +5,6 @@
  */
 const serverless = require("serverless-http");
 
-const GOOGLE_CLIENT_ID =
-  "903217229000-ughnh1ecf7vr73qdbsu1imbiq7hn5mjk.apps.googleusercontent.com";
-
 const { Pool } = require("pg");
 const pg = new Pool();
 
@@ -18,10 +15,10 @@ const bodyParser = require("body-parser");
 const multer = require("multer");
 
 const { v4: uuid } = require("uuid");
+const crypto = require("crypto-js");
 
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
-const lambda = new aws.Lambda({ region: "eu-west-2" });
 
 const app = express();
 app.disable("x-powered-by");
@@ -51,10 +48,10 @@ interface Recipe {
 }
 
 app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
-  const session_id = extractSessionId(req);
-  let user_id;
+  const sessionId = extractSessionId(req);
+  let userId;
   try {
-    user_id = await getUserIdFromValidSession(session_id);
+    userId = await getUserIdFromValidSession(sessionId);
   } catch (error) {
     return res.status(403).json({
       msg: "Invalid session",
@@ -74,7 +71,7 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
   try {
     const queryRes = await pg.query(
       "SELECT * FROM recipes WHERE user_id = $1",
-      [user_id]
+      [userId]
     );
     return res.json(
       queryRes.rows.map((row: Recipe) => ({
@@ -101,10 +98,10 @@ app.post(
     req: RequestWithBody<CreateRecipeBody>,
     res: ResponseWithErr<Recipe>
   ) => {
-    const session_id = extractSessionId(req);
-    let user_id;
+    const sessionId = extractSessionId(req);
+    let userId;
     try {
-      user_id = await getUserIdFromValidSession(session_id);
+      userId = await getUserIdFromValidSession(sessionId);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -131,7 +128,7 @@ app.post(
     try {
       const queryRes = await pg.query(
         "INSERT INTO recipes (url, title, notes, images, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-        [url, title, notes, images, user_id]
+        [url, title, notes, images, userId]
       );
 
       res
@@ -149,10 +146,10 @@ app.post(
 app.put(
   "/",
   async (req: RequestWithBody<Recipe>, res: ResponseWithErr<void>) => {
-    const session_id = extractSessionId(req);
-    let user_id;
+    const sessionId = extractSessionId(req);
+    let userId;
     try {
-      user_id = await getUserIdFromValidSession(session_id);
+      userId = await getUserIdFromValidSession(sessionId);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -187,7 +184,7 @@ app.put(
         id,
       ]);
       const recipe = recipeRes.rows[0];
-      if (recipe.user_id !== user_id) {
+      if (recipe.user_id !== userId) {
         return res.status(403).json({
           msg: "Not authorized to edit this recipe",
         });
@@ -217,10 +214,10 @@ app.delete(
     req: RequestWithBody<DeleteRecipeBody>,
     res: ResponseWithErr<void>
   ) => {
-    const session_id = extractSessionId(req);
-    let user_id;
+    const sessionId = extractSessionId(req);
+    let userId;
     try {
-      user_id = await getUserIdFromValidSession(session_id);
+      userId = await getUserIdFromValidSession(sessionId);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -249,7 +246,7 @@ app.delete(
         id,
       ]);
       const recipe = recipeRes.rows[0];
-      if (recipe.user_id !== user_id) {
+      if (recipe.user_id !== userId) {
         return res.status(403).json({
           msg: "Not authorized to delete this recipe",
         });
@@ -274,9 +271,9 @@ app.post(
   "/image",
   multer().single("image"),
   async (req: Request, res: ResponseWithErr<ImageUploadResponse>) => {
-    const session_id = extractSessionId(req);
+    const sessionId = extractSessionId(req);
     try {
-      await getUserIdFromValidSession(session_id);
+      await getUserIdFromValidSession(sessionId);
     } catch (error) {
       return res.status(403).json({
         msg: "Invalid session",
@@ -318,16 +315,6 @@ app.post(
  * Users and sessions
  */
 
-interface User {
-  email: string;
-  name?: string;
-}
-
-interface Session {
-  user_email: number;
-  session_id: string;
-}
-
 const extractSessionId = (req: Request): string | null => {
   if (req.headers.authorization) {
     const parts = req.headers.authorization.split(" ");
@@ -340,10 +327,10 @@ const extractSessionId = (req: Request): string | null => {
 };
 
 const getUserIdFromValidSession = async (
-  session_id: string | null
+  sessionId: string | null
 ): Promise<string> => {
-  if (!session_id) {
-    throw new Error("Null session_id");
+  if (!sessionId) {
+    throw new Error("Null sessionId");
   }
 
   try {
@@ -356,7 +343,7 @@ const getUserIdFromValidSession = async (
   try {
     const sessionRes = await pg.query(
       "SELECT * FROM sessions WHERE session_id = $1",
-      [session_id]
+      [sessionId]
     );
     session = sessionRes.rows[0];
   } catch (error) {
@@ -370,21 +357,26 @@ const getUserIdFromValidSession = async (
   return session.user_id;
 };
 
-interface LoginBody {
-  id_token: string;
+const encodePassword = (s: string): string => {
+  return crypto.SHA256(s).toString();
+};
+
+interface SignUpBody {
+  name: string;
+  email: string;
+  password: string;
 }
 
-interface LoginResponse {
-  session_id: string;
-  email: string;
+interface SignUpResponse {
+  sessionId: string;
   name: string;
 }
 
 app.post(
-  "/login/google",
+  "/sign-up",
   async (
-    req: RequestWithBody<LoginBody>,
-    res: ResponseWithErr<LoginResponse>
+    req: RequestWithBody<SignUpBody>,
+    res: ResponseWithErr<SignUpResponse>
   ) => {
     try {
       await pg.connect();
@@ -395,78 +387,57 @@ app.post(
       });
     }
 
-    const { id_token } = req.body;
-    if (isVoid(id_token)) {
+    const { name, email, password } = req.body;
+    if (isVoid(name) || isVoid(email) || isVoid(password)) {
       return res.status(400).json({
-        msg: "Missing Google id_token in login request",
+        msg: "Missing data in sign=up request",
       });
     }
 
-    let email, name, google_id;
-
+    // Check if there's already an account for this email
     try {
-      console.log('Calling recipes-app-auth-proxy with id_token: ' + id_token)
-      const googleAuthPayload = await lambda
-        .invoke({
-          FunctionName: "recipes-app-auth-proxy",
-          InvocationType: "RequestResponse",
-          Payload: JSON.stringify({ id_token }),
-        })
-        .promise();
-
-      console.log('recipes-app-auth-proxy returned: ' + JSON.stringify(googleAuthPayload))
-
-      if (googleAuthPayload.aud !== GOOGLE_CLIENT_ID) {
-        throw new Error("aud does not match app client ID");
-      }
-
-      email = googleAuthPayload.email;
-      name = googleAuthPayload.given_name + " " + googleAuthPayload.family_name;
-      google_id = googleAuthPayload.sub;
-    } catch (error) {
-      return res.status(403).json({
-        msg: "Invalid Google auth token",
-        error,
-      });
-    }
-
-    let user_id;
-    try {
-      const existingGoogleUserRes = await pg.query(
-        "SELECT * FROM users_google WHERE google_id = $1",
-        [google_id]
+      const existingUserRes = await pg.query(
+        "SELECT * FROM users_basic WHERE email = $1",
+        [email]
       );
-      const existingGoogleUser = existingGoogleUserRes.rows[0];
 
-      if (existingGoogleUser) {
-        user_id = existingGoogleUser.user_id;
-      } else {
-        user_id = uuid();
-
-        await pg.query(
-          "INSERT INTO users (id, email, name) VALUES ($1, $2, $3)",
-          [user_id, email, name]
-        );
-
-        await pg.query(
-          "INSERT INTO users_google (user_id, google_id) VALUES ($1, $2)",
-          [user_id, google_id]
-        );
+      if (existingUserRes.rows[0]) {
+        return res.status(400).json({
+          msg: "An account already exists for this email",
+        });
       }
     } catch (error) {
       return res.status(500).json({
-        msg: "Failed to retrieve or create user",
+        msg: "Failed to check whether email was associated with existing user",
+        error,
+      });
+    }
+
+    const userId = uuid();
+    try {
+      await pg.query("INSERT INTO users (id, name) VALUES ($1, $2)", [
+        userId,
+        name,
+      ]);
+
+      await pg.query(
+        "INSERT INTO users_basic (user_id, email, password) VALUES ($1, $2, $3)",
+        [userId, email, encodePassword(password)]
+      );
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to create user",
         error,
       });
     }
 
     try {
-      const session_id = uuid();
+      const sessionId = uuid();
       const sessionRes = await pg.query(
         "INSERT INTO sessions (user_id, session_id) VALUES ($1, $2)",
-        [user_id, session_id]
+        [userId, sessionId]
       );
-      res.status(200).json({ session_id, email, name });
+      res.status(200).json({ sessionId, name });
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to generate session",
@@ -476,10 +447,83 @@ app.post(
   }
 );
 
-app.post("/logout", async (req: Request, res: Response) => {
-  const session_id = extractSessionId(req);
+interface SignInBody {
+  email: string;
+  password: string;
+}
+
+interface SignInResponse {
+  sessionId: string;
+  name: string;
+}
+
+app.post(
+  "/sign-in",
+  async (
+    req: RequestWithBody<SignInBody>,
+    res: ResponseWithErr<SignInResponse>
+  ) => {
+    try {
+      await pg.connect();
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Error connecting to DB",
+        error,
+      });
+    }
+
+    const { email, password } = req.body;
+    if (isVoid(email) || isVoid(password)) {
+      return res.status(400).json({
+        msg: "Missing email or password in login request",
+      });
+    }
+
+    let userRes;
+    try {
+      userRes = await pg.query(
+        "SELECT * FROM users_basic WHERE email = $1 AND password = $2",
+        [email, encodePassword(password)]
+      );
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to query users",
+        error,
+      });
+    }
+
+    if (!userRes.rows[0]) {
+      return res.status(401).json({
+        msg: "Invalid email or password",
+      });
+    }
+
+    const userId = userRes.rows[0].user_id;
+    try {
+      const userRes = await pg.query("SELECT * FROM users WHERE id = $1", [
+        userId,
+      ]);
+      const { name } = userRes.rows[0];
+
+      const sessionId = uuid();
+      await pg.query(
+        "INSERT INTO sessions (user_id, session_id) VALUES ($1, $2)",
+        [userId, sessionId]
+      );
+      res.status(200).json({ sessionId, name });
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Failed to generate session",
+        error,
+      });
+    }
+  }
+);
+
+app.post("/sign-out", async (req: Request, res: Response) => {
+  const sessionId = extractSessionId(req);
   try {
-    await getUserIdFromValidSession(session_id);
+    await getUserIdFromValidSession(sessionId);
   } catch (error) {
     return res.status(403).json({
       msg: "Invalid session",
@@ -499,7 +543,7 @@ app.post("/logout", async (req: Request, res: Response) => {
   try {
     const sessionRes = await pg.query(
       "DELETE FROM sessions WHERE session_id = $1",
-      [session_id]
+      [sessionId]
     );
     return res.sendStatus(200);
   } catch (error) {

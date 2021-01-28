@@ -1,7 +1,13 @@
 CREATE TABLE IF NOT EXISTS users (
     id    UUID NOT NULL PRIMARY KEY,
-    email VARCHAR NOT NULL,
     name  VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS users_basic (
+    user_id   UUID NOT NULL REFERENCES users(id),
+    email     VARCHAR NOT NULL UNIQUE,
+    password  VARCHAR NOT NULL,
+    PRIMARY KEY (user_id)
 );
 
 CREATE TABLE IF NOT EXISTS users_google (
