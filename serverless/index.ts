@@ -5,9 +5,6 @@
  */
 const serverless = require("serverless-http");
 
-const { Pool } = require("pg");
-const pg = new Pool();
-
 import { Request, Response } from "express";
 const express = require("express");
 const cors = require("cors");
@@ -346,28 +343,30 @@ const getUserIdFromValidSession = async (
     throw new Error("Null sessionId");
   }
 
+  let userId = null;
   try {
-    await pg.connect();
-  } catch (error) {
-    throw new Error("Error connecting to DB");
-  }
+    const {
+      Item: {
+        user_id: { S: userIdForSession },
+      },
+    } = await dynamo
+      .getItem({
+        TableName: "recipes_sessions",
+        Key: { session_id: { S: sessionId } },
+        ProjectionExpression: "user_id",
+      })
+      .promise();
 
-  let session = null;
-  try {
-    const sessionRes = await pg.query(
-      "SELECT * FROM sessions WHERE session_id = $1",
-      [sessionId]
-    );
-    session = sessionRes.rows[0];
+    userId = userIdForSession;
   } catch (error) {
     throw new Error("Failed to query for session");
   }
 
-  if (!session) {
+  if (!userId) {
     throw new Error("Invalid session");
   }
 
-  return session.user_id;
+  return userId;
 };
 
 const encodePassword = (s: string): string => {
@@ -391,15 +390,6 @@ app.post(
     req: RequestWithBody<SignUpBody>,
     res: ResponseWithErr<SignUpResponse>
   ) => {
-    try {
-      await pg.connect();
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Error connecting to DB",
-        error,
-      });
-    }
-
     const { name, email, password } = req.body;
     if (isVoid(name) || isVoid(email) || isVoid(password)) {
       return res.status(400).json({
@@ -409,12 +399,12 @@ app.post(
 
     // Check if there's already an account for this email
     try {
-      const existingUserRes = await pg.query(
-        "SELECT * FROM users_basic WHERE email = $1",
-        [email]
-      );
+      const { Item } = await dynamo.getItem({
+        TableName: "recipes_users_basic",
+        Key: { email: { S: email } },
+      });
 
-      if (existingUserRes.rows[0]) {
+      if (Item) {
         return res.status(400).json({
           msg: "An account already exists for this email",
         });
@@ -428,15 +418,26 @@ app.post(
 
     const userId = uuid();
     try {
-      await pg.query("INSERT INTO users (id, name) VALUES ($1, $2)", [
-        userId,
-        name,
-      ]);
+      await dynamo
+        .putItem({
+          TableName: "recipes_users",
+          Item: {
+            id: { S: userId },
+            name: { S: name },
+          },
+        })
+        .promise();
 
-      await pg.query(
-        "INSERT INTO users_basic (user_id, email, password) VALUES ($1, $2, $3)",
-        [userId, email, encodePassword(password)]
-      );
+      await dynamo
+        .putItem({
+          TableName: "recipes_users_basic",
+          Item: {
+            user_id: { S: userId },
+            email: { S: email },
+            password: { S: password },
+          },
+        })
+        .promise();
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to create user",
@@ -446,10 +447,17 @@ app.post(
 
     try {
       const sessionId = uuid();
-      const sessionRes = await pg.query(
-        "INSERT INTO sessions (user_id, session_id) VALUES ($1, $2)",
-        [userId, sessionId]
-      );
+
+      await dynamo
+        .putItem({
+          TableName: "recipes_sessions",
+          Item: {
+            user_id: { S: userId },
+            session_id: { S: sessionId },
+          },
+        })
+        .promise();
+
       res.status(200).json({ sessionId, name });
     } catch (error) {
       return res.status(500).json({
@@ -476,15 +484,6 @@ app.post(
     req: RequestWithBody<SignInBody>,
     res: ResponseWithErr<SignInResponse>
   ) => {
-    try {
-      await pg.connect();
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Error connecting to DB",
-        error,
-      });
-    }
-
     const { email, password } = req.body;
     if (isVoid(email) || isVoid(password)) {
       return res.status(400).json({
@@ -494,10 +493,16 @@ app.post(
 
     let userRes;
     try {
-      userRes = await pg.query(
-        "SELECT * FROM users_basic WHERE email = $1 AND password = $2",
-        [email, encodePassword(password)]
-      );
+      const { Item } = await dynamo
+        .getItem({
+          TableName: "recipes_users_basic",
+          Key: {
+            email: { S: email },
+            password: { S: encodePassword(password) },
+          },
+        })
+        .promise();
+      userRes = Item;
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to query users",
@@ -505,24 +510,38 @@ app.post(
       });
     }
 
-    if (!userRes.rows[0]) {
+    if (!userRes) {
       return res.status(401).json({
         msg: "Invalid email or password",
       });
     }
 
-    const userId = userRes.rows[0].user_id;
+    const userId = userRes.user_id.S;
     try {
-      const userRes = await pg.query("SELECT * FROM users WHERE id = $1", [
-        userId,
-      ]);
-      const { name } = userRes.rows[0];
+      const {
+        Item: {
+          name: { S: name },
+        },
+      } = await dynamo
+        .getItem({
+          TableName: "recipes_users",
+          Key: { id: { S: userId } },
+          ProjectionExpression: "name",
+        })
+        .promise();
 
       const sessionId = uuid();
-      await pg.query(
-        "INSERT INTO sessions (user_id, session_id) VALUES ($1, $2)",
-        [userId, sessionId]
-      );
+
+      await dynamo
+        .putItem({
+          TableName: "recipes_sessions",
+          Item: {
+            user_id: { S: userId },
+            session_id: { S: sessionId },
+          },
+        })
+        .promise();
+
       res.status(200).json({ sessionId, name });
     } catch (error) {
       return res.status(500).json({
@@ -545,19 +564,13 @@ app.post("/sign-out", async (req: Request, res: Response) => {
   }
 
   try {
-    await pg.connect();
-  } catch (error) {
-    return res.status(500).json({
-      msg: "Error connecting to DB",
-      error,
-    });
-  }
+    await dynamo
+      .deleteItem({
+        TableName: "recipes_sessions",
+        Key: { session_id: { S: sessionId } },
+      })
+      .promise();
 
-  try {
-    const sessionRes = await pg.query(
-      "DELETE FROM sessions WHERE session_id = $1",
-      [sessionId]
-    );
     return res.sendStatus(200);
   } catch (error) {
     return res.status(500).json({
