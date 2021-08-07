@@ -19,6 +19,9 @@ const crypto = require("crypto-js");
 
 const aws = require("aws-sdk");
 const s3 = new aws.S3();
+const dynamo = new aws.DynamoDB({
+  region: "eu-west-2",
+});
 
 const app = express();
 app.disable("x-powered-by");
@@ -40,7 +43,7 @@ type ResponseWithErr<T> = Response<T | ApiError>;
  */
 
 interface Recipe {
-  id: number;
+  id: string;
   url: string;
   title: string;
   notes: string;
@@ -60,26 +63,21 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
   }
 
   try {
-    await pg.connect();
-  } catch (error) {
-    return res.status(500).json({
-      msg: "Error connecting to DB",
-      error,
-    });
-  }
+    const { Items: items } = await dynamo
+      .scan({
+        TableName: "recipes",
+      })
+      .promise();
 
-  try {
-    const queryRes = await pg.query(
-      "SELECT * FROM recipes WHERE user_id = $1",
-      [userId]
-    );
+    // TODO fix @ts-ignore and check whether this response is paginated
     return res.json(
-      queryRes.rows.map((row: Recipe) => ({
-        id: row.id,
-        url: row.url,
-        title: row.title,
-        notes: row.notes,
-        images: row.images,
+      // @ts-ignore
+      items.map((item) => ({
+        id: item.id.S,
+        url: item.url.S,
+        title: item.title.S,
+        notes: item.notes.S,
+        images: item.images ? item.images.SS : [],
       }))
     );
   } catch (error) {
@@ -109,15 +107,6 @@ app.post(
       });
     }
 
-    try {
-      await pg.connect();
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Error connecting to DB",
-        error,
-      });
-    }
-
     const { url, title, notes, images } = req.body;
     if (isVoid(url) || isVoid(title) || isVoid(notes) || isVoid(images)) {
       return res.status(400).json({
@@ -125,15 +114,24 @@ app.post(
       });
     }
 
-    try {
-      const queryRes = await pg.query(
-        "INSERT INTO recipes (url, title, notes, images, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-        [url, title, notes, images, userId]
-      );
+    const id = uuid();
 
-      res
-        .status(201)
-        .json({ id: queryRes.rows[0].id, url, title, notes, images });
+    try {
+      await dynamo
+        .putItem({
+          TableName: "recipes",
+          Item: {
+            id: { S: id },
+            url: { S: url },
+            title: { S: title },
+            notes: { S: notes },
+            images: images.length ? { SS: images } : undefined,
+            user_id: { S: userId },
+          },
+        })
+        .promise();
+
+      res.status(201).json({ id, url, title, notes, images });
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to create recipe",
@@ -157,15 +155,6 @@ app.put(
       });
     }
 
-    try {
-      await pg.connect();
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Error connecting to DB",
-        error,
-      });
-    }
-
     const { id, url, title, notes, images } = req.body;
     if (
       isVoid(id) ||
@@ -180,20 +169,39 @@ app.put(
     }
 
     try {
-      const recipeRes = await pg.query("SELECT * FROM recipes WHERE id = $1", [
-        id,
-      ]);
-      const recipe = recipeRes.rows[0];
-      if (recipe.user_id !== userId) {
+      const {
+        Item: {
+          user_id: { S: recipeUserId },
+        },
+      } = await dynamo
+        .getItem({
+          TableName: "recipes",
+          Key: { id: { S: id } },
+          ProjectionExpression: "user_id",
+        })
+        .promise();
+
+      if (recipeUserId !== userId) {
         return res.status(403).json({
           msg: "Not authorized to edit this recipe",
         });
       }
 
-      await pg.query(
-        "UPDATE recipes SET url = $1, title = $2, notes = $3, images = $4 WHERE id = $5",
-        [url, title, notes, images, id]
-      );
+      // TODO see if there's an update operation rather than overwriting
+      await dynamo
+        .putItem({
+          TableName: "recipes",
+          Item: {
+            id: { S: id },
+            url: { S: url },
+            title: { S: title },
+            notes: { S: notes },
+            images: images.length ? { SS: images } : undefined,
+            user_id: { S: userId },
+          },
+        })
+        .promise();
+
       return res.sendStatus(204);
     } catch (error) {
       return res.status(500).json({
@@ -225,15 +233,6 @@ app.delete(
       });
     }
 
-    try {
-      await pg.connect();
-    } catch (error) {
-      return res.status(500).json({
-        msg: "Error connecting to DB",
-        error,
-      });
-    }
-
     const { id } = req.body;
     if (isVoid(id)) {
       return res.status(400).json({
@@ -242,17 +241,31 @@ app.delete(
     }
 
     try {
-      const recipeRes = await pg.query("SELECT * FROM recipes WHERE id = $1", [
-        id,
-      ]);
-      const recipe = recipeRes.rows[0];
-      if (recipe.user_id !== userId) {
+      const {
+        Item: {
+          user_id: { S: recipeUserId },
+        },
+      } = await dynamo
+        .getItem({
+          TableName: "recipes",
+          Key: { id: { S: id } },
+          ProjectionExpression: "user_id",
+        })
+        .promise();
+
+      if (recipeUserId !== userId) {
         return res.status(403).json({
           msg: "Not authorized to delete this recipe",
         });
       }
 
-      await pg.query("DELETE FROM recipes WHERE id = $1", [id]);
+      await dynamo
+        .deleteItem({
+          TableName: "recipes",
+          Key: { id: { S: id } },
+        })
+        .promise();
+
       return res.sendStatus(204);
     } catch (error) {
       return res.status(500).json({
