@@ -60,13 +60,25 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
   }
 
   try {
+    /**
+     * TODO This query is limited to 1MB of data at a time. We need to check for
+     * a `LastEvaluatedKey` and handle pagination if it's present, either here
+     * or in the frontend.
+     *
+     * See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html
+     */
     const { Items: items } = await dynamo
-      .scan({
+      .query({
         TableName: "recipes",
+        IndexName: "RecipesByUser",
+        KeyConditionExpression: "user_id = :u",
+        ExpressionAttributeValues: {
+          ":u": { S: userId },
+        },
       })
       .promise();
 
-    // TODO fix @ts-ignore and check whether this response is paginated
+    // TODO fix @ts-ignore
     return res.json(
       // @ts-ignore
       items.map((item) => ({
@@ -184,7 +196,7 @@ app.put(
         });
       }
 
-      // TODO see if there's an update operation rather than overwriting
+      // TODO Use an update operation rather than overwriting every time
       await dynamo
         .putItem({
           TableName: "recipes",
@@ -399,10 +411,14 @@ app.post(
 
     // Check if there's already an account for this email
     try {
-      const { Item } = await dynamo.getItem({
-        TableName: "recipes_users_basic",
-        Key: { email: { S: email } },
-      });
+      const { Item } = await dynamo
+        .getItem({
+          TableName: "recipes_users_basic",
+          Key: {
+            email: { S: email },
+          },
+        })
+        .promise();
 
       if (Item) {
         return res.status(400).json({
@@ -410,6 +426,8 @@ app.post(
         });
       }
     } catch (error) {
+      console.error(error);
+      // TODO ensure errors are included in responses properly
       return res.status(500).json({
         msg: "Failed to check whether email was associated with existing user",
         error,
@@ -434,7 +452,7 @@ app.post(
           Item: {
             user_id: { S: userId },
             email: { S: email },
-            password: { S: password },
+            password: { S: encodePassword(password) },
           },
         })
         .promise();
@@ -496,12 +514,10 @@ app.post(
       const { Item } = await dynamo
         .getItem({
           TableName: "recipes_users_basic",
-          Key: {
-            email: { S: email },
-            password: { S: encodePassword(password) },
-          },
+          Key: { email: { S: email } },
         })
         .promise();
+
       userRes = Item;
     } catch (error) {
       return res.status(500).json({
@@ -510,7 +526,7 @@ app.post(
       });
     }
 
-    if (!userRes) {
+    if (!userRes || userRes.password.S !== encodePassword(password)) {
       return res.status(401).json({
         msg: "Invalid email or password",
       });
@@ -526,7 +542,6 @@ app.post(
         .getItem({
           TableName: "recipes_users",
           Key: { id: { S: userId } },
-          ProjectionExpression: "name",
         })
         .promise();
 
