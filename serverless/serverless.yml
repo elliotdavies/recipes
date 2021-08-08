@@ -5,13 +5,19 @@ provider:
   runtime: nodejs12.x
   stage: prod
   region: eu-west-2
-  vpc:
-    securityGroupIds:
-      - sg-06925ff8c3aba277c
-    subnetIds:
-      - subnet-042f3170b0b2b2cbe
-      - subnet-0b5942aae2cc57e6e
   iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:Query
+      Resource:
+        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes"
+        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes/index/RecipesByUser"
+        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users"
+        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users_basic"
+        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_sessions"
     - Effect: Allow
       Action:
         - s3:PutObject
