@@ -14,6 +14,7 @@ provider:
         - dynamodb:Query
       Resource:
         - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes"
+        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes/index/RecipesByUser"
         - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users"
         - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users_basic"
         - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_sessions"
