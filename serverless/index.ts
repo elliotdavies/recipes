@@ -14,7 +14,7 @@ const multer = require("multer");
 const { v4: uuid } = require("uuid");
 const crypto = require("crypto-js");
 
-const aws = require("aws-sdk");
+import aws from "aws-sdk";
 const s3 = new aws.S3();
 const dynamo = new aws.DynamoDB({
   region: "eu-west-2",
@@ -47,6 +47,15 @@ interface Recipe {
   images: string[];
 }
 
+interface DynamoRecipe {
+  id: { S: string };
+  url: { S: string };
+  title: { S: string };
+  notes: { S: string };
+  images?: { SS: string[] };
+  user_id: { S: string };
+}
+
 app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
   const sessionId = extractSessionId(req);
   let userId;
@@ -67,7 +76,7 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
      *
      * See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html
      */
-    const { Items: items } = await dynamo
+    const dynamoRes = await dynamo
       .query({
         TableName: "recipes",
         IndexName: "RecipesByUser",
@@ -78,9 +87,9 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
       })
       .promise();
 
-    // TODO fix @ts-ignore
+    const items = (dynamoRes.Items as unknown) as DynamoRecipe[];
+
     return res.json(
-      // @ts-ignore
       items.map((item) => ({
         id: item.id.S,
         url: item.url.S,
@@ -134,7 +143,7 @@ app.post(
             url: { S: url },
             title: { S: title },
             notes: { S: notes },
-            images: images.length ? { SS: images } : undefined,
+            ...(images.length ? { images: { SS: images } } : {}),
             user_id: { S: userId },
           },
         })
@@ -178,11 +187,7 @@ app.put(
     }
 
     try {
-      const {
-        Item: {
-          user_id: { S: recipeUserId },
-        },
-      } = await dynamo
+      const { Item } = await dynamo
         .getItem({
           TableName: "recipes",
           Key: { id: { S: id } },
@@ -190,7 +195,7 @@ app.put(
         })
         .promise();
 
-      if (recipeUserId !== userId) {
+      if (!Item || Item.user_id.S !== userId) {
         return res.status(403).json({
           msg: "Not authorized to edit this recipe",
         });
@@ -205,7 +210,7 @@ app.put(
             url: { S: url },
             title: { S: title },
             notes: { S: notes },
-            images: images.length ? { SS: images } : undefined,
+            ...(images.length ? { images: { SS: images } } : {}),
             user_id: { S: userId },
           },
         })
@@ -222,7 +227,7 @@ app.put(
 );
 
 interface DeleteRecipeBody {
-  id: number;
+  id: string;
 }
 
 app.delete(
@@ -250,11 +255,7 @@ app.delete(
     }
 
     try {
-      const {
-        Item: {
-          user_id: { S: recipeUserId },
-        },
-      } = await dynamo
+      const { Item } = await dynamo
         .getItem({
           TableName: "recipes",
           Key: { id: { S: id } },
@@ -262,7 +263,7 @@ app.delete(
         })
         .promise();
 
-      if (recipeUserId !== userId) {
+      if (!Item || Item.user_id.S !== userId) {
         return res.status(403).json({
           msg: "Not authorized to delete this recipe",
         });
@@ -355,13 +356,9 @@ const getUserIdFromValidSession = async (
     throw new Error("Null sessionId");
   }
 
-  let userId = null;
+  let userId: string | undefined;
   try {
-    const {
-      Item: {
-        user_id: { S: userIdForSession },
-      },
-    } = await dynamo
+    const { Item } = await dynamo
       .getItem({
         TableName: "recipes_sessions",
         Key: { session_id: { S: sessionId } },
@@ -369,7 +366,9 @@ const getUserIdFromValidSession = async (
       })
       .promise();
 
-    userId = userIdForSession;
+    if (Item) {
+      userId = Item.user_id.S;
+    }
   } catch (error) {
     throw new Error("Failed to query for session");
   }
@@ -427,7 +426,8 @@ app.post(
       }
     } catch (error) {
       console.error(error);
-      // TODO ensure errors are included in responses properly
+      // TODO Ensure errors are included in responses properly. This currently
+      // seems to come through in the frontend as `{}`
       return res.status(500).json({
         msg: "Failed to check whether email was associated with existing user",
         error,
@@ -534,17 +534,18 @@ app.post(
 
     const userId = userRes.user_id.S;
     try {
-      const {
-        Item: {
-          name: { S: name },
-        },
-      } = await dynamo
+      const { Item } = await dynamo
         .getItem({
           TableName: "recipes_users",
           Key: { id: { S: userId } },
         })
         .promise();
 
+      if (!Item) {
+        throw new Error("No user found for given ID");
+      }
+
+      const name: string = Item.name.S || "";
       const sessionId = uuid();
 
       await dynamo
@@ -579,6 +580,10 @@ app.post("/sign-out", async (req: Request, res: Response) => {
   }
 
   try {
+    if (!sessionId) {
+      throw new Error("Missing session ID");
+    }
+
     await dynamo
       .deleteItem({
         TableName: "recipes_sessions",
