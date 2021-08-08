@@ -3,16 +3,15 @@
  * https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/express/index.d.ts
  * https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/express-serve-static-core/index.d.ts
  */
-const serverless = require("serverless-http");
+import serverless from "serverless-http";
 
-import { Request, Response } from "express";
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const multer = require("multer");
+import express, { Request, Response } from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import multer from "multer";
 
-const { v4: uuid } = require("uuid");
-const crypto = require("crypto-js");
+import { v4 as uuid } from "uuid";
+import crypto from "crypto-js";
 
 import aws from "aws-sdk";
 const s3 = new aws.S3();
