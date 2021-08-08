@@ -14,6 +14,10 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:Query
         - s3:PutObject
         - s3:PutObjectAcl
       Resource: "arn:aws:s3:::recipes.elliotdavies.co.uk/*"
