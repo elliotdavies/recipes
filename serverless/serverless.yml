@@ -5,12 +5,12 @@ provider:
   runtime: nodejs12.x
   stage: prod
   region: eu-west-2
-  vpc:
-    securityGroupIds:
-      - sg-06925ff8c3aba277c
-    subnetIds:
-      - subnet-042f3170b0b2b2cbe
-      - subnet-0b5942aae2cc57e6e
+  # vpc:
+  #   securityGroupIds:
+  #     - sg-06925ff8c3aba277c
+  #   subnetIds:
+  #     - subnet-042f3170b0b2b2cbe
+  #     - subnet-0b5942aae2cc57e6e
   iamRoleStatements:
     - Effect: Allow
       Action:
