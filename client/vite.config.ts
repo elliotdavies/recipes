@@ -8,6 +8,7 @@ export default defineConfig({
     __API_URL__: JSON.stringify(process.env.VITE_API_URL || '//api.recipes.elliotdavies.co.uk')
   },
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    sourcemap: true
   }
 })

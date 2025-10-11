@@ -42,6 +42,18 @@ plugins:
   - serverless-offline
 
 custom:
+  # Custom domain configuration using wildcard certificate
+  customDomain:
+    domainName: api.recipes.elliotdavies.co.uk
+    certificateName: '*.elliotdavies.co.uk'
+    basePath: ''
+    stage: prod
+    createRoute53Record: false
+    endpointType: 'regional'
+    securityPolicy: tls_1_2
+    apiType: http
+    autoDomain: true
+
   esbuild:
     bundle: true
     minify: false

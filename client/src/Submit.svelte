@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { link, navigate } from 'svelte-routing';
+  import { link, push } from 'svelte-spa-router';
 
   import { submitRecipe } from "./api";
   import { recipes, sessionId } from "./store";
@@ -33,7 +33,7 @@
   };
 
   const onCancel = () => {
-    navigate('/');
+    push('/');
   }
 
   const reset = () => {

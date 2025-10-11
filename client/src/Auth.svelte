@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { navigate } from 'svelte-routing'
+  import { push } from 'svelte-spa-router'
   import * as store from './store'
   import * as api from './api';
   import { setSessionId, unsetSessionId } from './utils'
@@ -41,7 +41,7 @@
       })
       .then(getRecipes)
       .then(() => {
-        navigate("/");
+        push("/");
       })
       .catch(e => {
         console.error(e);
@@ -64,7 +64,7 @@
       })
       .then(getRecipes)
       .then(() => {
-        navigate("/");
+        push("/");
       })
       .catch(e => {
         console.error(e);
