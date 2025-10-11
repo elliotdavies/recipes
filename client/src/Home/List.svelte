@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { link } from 'svelte-spa-router';
+  import { Link } from 'svelte-navigator';
 
   import { recipes } from "../store";
 
@@ -64,9 +64,9 @@ h2 {
   <ul class="recipes">
   {#each filteredRecipes as recipe}
     <li class="recipe">
-      <a href={`/recipe/${recipe.id}`} use:link>
+      <Link to={`/recipe/${recipe.id}`}>
         <p class="title">{recipe.title || recipe.url}</p>
-      </a>
+      </Link>
     </li>
   {:else}
     <span>No recipes yet...</span>

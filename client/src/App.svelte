@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Router, { push } from 'svelte-spa-router';
+  import { Router, Route } from 'svelte-navigator';
 
   import { getRecipes } from "./api";
   import { getSessionId } from "./utils";
@@ -19,15 +19,6 @@
       .then(rs => {
         recipes.set(rs);
       });
-  } else {
-    push("/auth")
-  }
-
-  const routes = {
-    '/': Home,
-    '/auth': Auth,
-    '/submit': Submit,
-    '/recipe/:id': Recipe,
   }
 </script>
 
@@ -38,8 +29,14 @@
   <link href="https://fonts.googleapis.com/css?family=Shadows+Into+Light&display=swap" rel="stylesheet">
 </svelte:head>
 
-<Header />
-
-<main>
-  <Router {routes} />
-</main>
+<Router>
+  <Header />
+  <main>
+    <Route path="/" component={Home} primary={false} />
+    <Route path="/auth" component={Auth} primary={false} />
+    <Route path="/submit" component={Submit} primary={false} />
+    <Route path="/recipe/:id" let:params primary={false}>
+      <Recipe id={params.id} />
+    </Route>
+  </main>
+</Router>
