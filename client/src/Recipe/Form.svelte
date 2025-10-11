@@ -1,16 +1,17 @@
-<script>
+<script lang="ts">
+  import type { Recipe } from '../types'
   import { postImage } from '../api'
   import { sessionId } from '../store'
 
-  export let recipe = {
+  export let recipe: Partial<Recipe> = {
     url: "",
     title: "",
     notes: "",
     images: [],
   }
 
-  export let onSave;
-  export let onCancel;
+  export let onSave: (recipe: Partial<Recipe>) => void;
+  export let onCancel: () => void;
 
   let state = {
     sessionId: null,

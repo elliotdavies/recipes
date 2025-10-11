@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { link, navigate } from 'svelte-routing';
 
   import { submitRecipe } from "./api";
@@ -16,9 +16,7 @@
   });
 
   const onSave = recipe => {
-    const { url, title, notes, images } = recipe;
-
-    submitRecipe(state.sessionId, url, title, notes, images)
+    submitRecipe(state.sessionId, recipe)
       .then(recipe => {
         state = {
           status: "success"

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { navigate } from "svelte-routing";
 
   import { toFullUrl } from './utils';
@@ -7,7 +7,7 @@
 
   import Form from './Recipe/Form.svelte'
 
-  export let id;
+  export let id: string;
 
   let state = {
     sessionId: null,
@@ -32,12 +32,12 @@
   }
 
   const onSave = recipe => {
-    const { url, title, notes, images } = recipe;
+    const recipeToUpdate = { ...recipe, id: state.recipe.id };
 
-    updateRecipe(state.sessionId, state.recipe.id, url, title, notes, images)
+    updateRecipe(state.sessionId, recipeToUpdate)
       .then(() => {
         recipes.update(rs =>
-          rs.map(r => r.id === id ? { ...r, recipe } : r));
+          rs.map(r => r.id === id ? { ...r, ...recipe } : r));
         state.request = {
           status: "success"
         }
