@@ -7,62 +7,13 @@ This guide explains how to set up `api.recipes.elliotdavies.co.uk` as a custom d
 - AWS CLI configured with appropriate credentials
 - Access to DNS management for `elliotdavies.co.uk`
 
-## Step 1: Create ACM Certificate
+## Certificate Already Configured
 
-The certificate **must** be created in `us-east-1` region (CloudFront/API Gateway requirement):
+The serverless.yml is already configured to use the existing wildcard certificate (`*.elliotdavies.co.uk`):
+- Certificate ARN: `arn:aws:acm:us-east-1:744937614989:certificate/6744253f-3fe7-44b1-8a13-bf384645cff3`
+- Status: ISSUED and valid until March 2026
 
-```bash
-# Request certificate
-aws acm request-certificate \
-  --domain-name api.recipes.elliotdavies.co.uk \
-  --validation-method DNS \
-  --region us-east-1
-
-# Output will include CertificateArn - save it!
-```
-
-## Step 2: Validate Certificate via DNS
-
-Get the DNS validation record:
-
-```bash
-aws acm describe-certificate \
-  --certificate-arn <YOUR-CERT-ARN> \
-  --region us-east-1 \
-  --query 'Certificate.DomainValidationOptions[0].ResourceRecord'
-```
-
-Add the CNAME record to your DNS:
-- **Type**: CNAME
-- **Name**: `_xxxxx.api.recipes.elliotdavies.co.uk` (from ResourceRecord.Name)
-- **Value**: `_xxxxx.acm-validations.aws.` (from ResourceRecord.Value)
-
-Wait for validation (usually 5-10 minutes). Check status:
-
-```bash
-aws acm describe-certificate \
-  --certificate-arn <YOUR-CERT-ARN> \
-  --region us-east-1 \
-  --query 'Certificate.Status'
-```
-
-## Step 3: Set Environment Variable
-
-Export the certificate ARN as an environment variable:
-
-```bash
-export API_CERTIFICATE_ARN=arn:aws:acm:us-east-1:744937614989:certificate/YOUR-CERT-ID
-```
-
-Or add it to your `~/.bashrc` or `~/.zshrc`:
-
-```bash
-echo 'export API_CERTIFICATE_ARN=arn:aws:acm:us-east-1:744937614989:certificate/YOUR-CERT-ID' >> ~/.zshrc
-```
-
-## Step 4: Deploy with Custom Domain
-
-Once the certificate is validated and the environment variable is set:
+## Deploy with Custom Domain
 
 ```bash
 cd serverless
@@ -74,7 +25,7 @@ Serverless will:
 2. Create the API mapping
 3. Output the API Gateway domain name
 
-## Step 5: Update DNS
+## Update DNS
 
 After deployment, Serverless will output something like:
 
