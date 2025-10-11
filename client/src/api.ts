@@ -14,10 +14,7 @@ export const getRecipes = (session_id: string): Promise<Recipe[]> =>
 
 export const submitRecipe = (
   session_id: string,
-  url: string,
-  title: string,
-  notes?: string,
-  images?: string[]
+  recipe: Omit<Recipe, 'id'>
 ): Promise<Recipe> =>
   fetch(apiUrl, {
     method: "POST",
@@ -25,7 +22,7 @@ export const submitRecipe = (
       'Authorization': `Bearer ${session_id}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ url, title, notes, images })
+    body: JSON.stringify(recipe)
   }).then(res => {
     if (res.status !== 201) throw new Error(String(res));
     else return res.json();
@@ -33,11 +30,7 @@ export const submitRecipe = (
 
 export const updateRecipe = (
   session_id: string,
-  id: string,
-  url: string,
-  title: string,
-  notes?: string,
-  images?: string[]
+  recipe: Recipe
 ): Promise<Response> =>
   fetch(apiUrl, {
     method: "PUT",
@@ -45,7 +38,7 @@ export const updateRecipe = (
       'Authorization': `Bearer ${session_id}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ id, url, title, notes, images })
+    body: JSON.stringify(recipe)
   }).then(res => {
     if (res.status !== 204) throw new Error(String(res));
     else return res;

@@ -8,9 +8,16 @@
 	<title>Recipes</title>
 
   <link rel="preconnect" href="//fonts.googleapis.com" />
-  <link rel="preconnect" href="//api.recipes.elliotdavies.co.uk" />
 
 	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<script type="module">
+		// Inject API URL for preconnect hint
+		const apiUrl = import.meta.env.VITE_API_URL || '//api.recipes.elliotdavies.co.uk';
+		const link = document.createElement('link');
+		link.rel = 'preconnect';
+		link.href = apiUrl;
+		document.head.appendChild(link);
+	</script>
 </head>
 
 <body>

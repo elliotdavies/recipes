@@ -3,7 +3,7 @@ export interface Recipe {
   url: string;
   title: string;
   notes?: string;
-  images?: string[];
+  images: string[];
 }
 
 export interface AuthResponse {

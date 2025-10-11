@@ -32,12 +32,12 @@
   }
 
   const onSave = recipe => {
-    const { url, title, notes, images } = recipe;
+    const recipeToUpdate = { ...recipe, id: state.recipe.id };
 
-    updateRecipe(state.sessionId, state.recipe.id, url, title, notes, images)
+    updateRecipe(state.sessionId, recipeToUpdate)
       .then(() => {
         recipes.update(rs =>
-          rs.map(r => r.id === id ? { ...r, recipe } : r));
+          rs.map(r => r.id === id ? { ...r, ...recipe } : r));
         state.request = {
           status: "success"
         }
