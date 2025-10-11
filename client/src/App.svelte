@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Router, { push } from 'svelte-spa-router';
 
   import { getRecipes } from "./api";
@@ -14,14 +15,16 @@
   const session_id = getSessionId()
   sessionId.set(session_id);
 
-  if (session_id) {
-    getRecipes(session_id)
-      .then(rs => {
-        recipes.set(rs);
-      });
-  } else {
-    push("/auth")
-  }
+  onMount(() => {
+    if (session_id) {
+      getRecipes(session_id)
+        .then(rs => {
+          recipes.set(rs);
+        });
+    } else {
+      push("/auth")
+    }
+  });
 
   const routes = {
     '/': Home,
