@@ -5,6 +5,12 @@ provider:
   runtime: nodejs20.x
   stage: prod
   region: eu-west-2
+  httpApi:
+    # Custom domain configuration
+    # Certificate must be created in us-east-1 and validated
+    domain:
+      domainName: api.recipes.elliotdavies.co.uk
+      certificateArn: ${env:API_CERTIFICATE_ARN}
   iam:
     role:
       statements:
