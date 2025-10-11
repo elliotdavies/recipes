@@ -1,14 +1,19 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "esModuleInterop": true,
-    "lib": ["es2015"],
-    "moduleResolution": "node",
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
     "outDir": ".build",
-    "preserveConstEnums": true,
     "rootDir": "./",
-    "sourceMap": true,
     "strict": true,
-    "target": "es5"
-  }
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "preserveConstEnums": true
+  },
+  "include": ["index.ts"],
+  "exclude": ["node_modules", ".serverless", ".build"]
 }

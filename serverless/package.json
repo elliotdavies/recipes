@@ -11,26 +11,28 @@
     "format": "prettier --write index.ts"
   },
   "dependencies": {
-    "aws-sdk": "^2.814.0",
-    "body-parser": "^1.19.0",
+    "aws-sdk": "^2.1692.0",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "crypto-js": "^4.0.0",
-    "express": "^4.17.1",
-    "multer": "^1.4.2",
-    "serverless-http": "^2.5.0",
-    "uuid": "^8.3.0"
+    "crypto-js": "^4.2.0",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "serverless-http": "^3.2.0",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.7",
-    "@types/crypto-js": "^4.0.2",
-    "@types/express": "^4.17.7",
-    "@types/multer": "^1.4.4",
-    "@types/node": "^14.0.27",
-    "@types/uuid": "^8.3.1",
-    "prettier": "^2.0.5",
-    "serverless": "^1.78.1",
-    "serverless-offline": "^6.5.0",
-    "serverless-plugin-typescript": "^1.1.9",
-    "typescript": "^3.9.7"
+    "@types/aws-lambda": "^8.10.145",
+    "@types/cors": "^2.8.17",
+    "@types/crypto-js": "^4.2.2",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^20.17.12",
+    "@types/uuid": "^10.0.0",
+    "esbuild": "^0.24.2",
+    "prettier": "^3.4.2",
+    "serverless": "^3.39.0",
+    "serverless-esbuild": "^1.54.3",
+    "serverless-offline": "^13.8.4",
+    "typescript": "^5.7.3"
   }
 }

@@ -2,27 +2,29 @@ service: recipes-api
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs20.x
   stage: prod
   region: eu-west-2
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:DeleteItem
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:Query
-      Resource:
-        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes"
-        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes/index/RecipesByUser"
-        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users"
-        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users_basic"
-        - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_sessions"
-    - Effect: Allow
-      Action:
-        - s3:PutObject
-        - s3:PutObjectAcl
-      Resource: "arn:aws:s3:::recipes.elliotdavies.co.uk/*"
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DeleteItem
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:Query
+          Resource:
+            - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes"
+            - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes/index/RecipesByUser"
+            - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users"
+            - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_users_basic"
+            - "arn:aws:dynamodb:eu-west-2:744937614989:table/recipes_sessions"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:PutObjectAcl
+          Resource: "arn:aws:s3:::recipes.elliotdavies.co.uk/*"
   apiGateway:
     binaryMediaTypes:
       - '*/*'
@@ -31,14 +33,23 @@ functions:
   app:
     handler: index.handler
     events:
-      - http: ANY /
-      - http: 'ANY {proxy+}'
+      - httpApi: '*'
 
 plugins:
-  - serverless-plugin-typescript
+  - serverless-esbuild
   - serverless-offline
 
 custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude:
+      - aws-sdk
+    target: node20
+    platform: node
+    concurrency: 10
+
   serverless-offline:
     httpPort: 8000
     noPrependStageInUrl: true
