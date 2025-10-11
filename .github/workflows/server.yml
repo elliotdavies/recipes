@@ -28,7 +28,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build serverless package
-        run: npx serverless package
+        run: yarn build
 
       - name: Configure AWS credentials
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
