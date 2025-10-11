@@ -5,6 +5,11 @@ provider:
   runtime: nodejs20.x
   stage: prod
   region: eu-west-2
+  httpApi:
+    # Custom domain configuration using wildcard certificate
+    domain:
+      domainName: api.recipes.elliotdavies.co.uk
+      certificateArn: arn:aws:acm:us-east-1:744937614989:certificate/6744253f-3fe7-44b1-8a13-bf384645cff3
   iam:
     role:
       statements:
