@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { link, replace } from 'svelte-spa-router';
+  import { Link, navigate } from 'svelte-navigator';
   import { onMount } from 'svelte';
   import { sessionId } from "./store";
 
@@ -12,7 +12,7 @@
 
   onMount(() => {
     if (!session_id) {
-      replace('/auth');
+      navigate('/auth');
     }
   });
 </script>
@@ -20,5 +20,5 @@
 <style>
 </style>
 
-<a href="/submit" use:link>Save new recipe</a>
+<Link to="/submit">Save new recipe</Link>
 <List />

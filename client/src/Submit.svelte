@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { link, push } from 'svelte-spa-router';
+  import { Link, navigate } from 'svelte-navigator';
 
   import { submitRecipe } from "./api";
   import { recipes, sessionId } from "./store";
@@ -33,7 +33,7 @@
   };
 
   const onCancel = () => {
-    push('/');
+    navigate('/');
   }
 
   const reset = () => {
@@ -82,7 +82,7 @@ code {
     <div class="success">
       <span class="status">Saved successfully!</span>
       <button type="button" on:click={reset}>Save another</button>
-      <a href="/" use:link>Go home</a>
+      <Link to="/">Go home</Link>
     </div>
 
   {:else if state.status === 'failure'}

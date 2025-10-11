@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { link } from 'svelte-spa-router';
+  import { Link } from 'svelte-navigator';
 </script>
 
 <style>
@@ -25,6 +25,6 @@ a {
 
 <header>
   <h1>
-    <a href="/" use:link>Recipes 📚</a>
+    <Link to="/">Recipes 📚</Link>
   </h1>
 </header>
