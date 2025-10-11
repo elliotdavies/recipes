@@ -5,11 +5,6 @@ provider:
   runtime: nodejs20.x
   stage: prod
   region: eu-west-2
-  httpApi:
-    # Custom domain configuration using wildcard certificate
-    domain:
-      domainName: api.recipes.elliotdavies.co.uk
-      certificateArn: arn:aws:acm:us-east-1:744937614989:certificate/6744253f-3fe7-44b1-8a13-bf384645cff3
   iam:
     role:
       statements:
@@ -38,19 +33,31 @@ functions:
   app:
     handler: index.handler
     events:
-      - httpApi: '*'
+      - httpApi:
+          method: '*'
+          path: '*'
 
 plugins:
   - serverless-esbuild
   - serverless-offline
 
 custom:
+  # Custom domain configuration using wildcard certificate
+  customDomain:
+    domainName: api.recipes.elliotdavies.co.uk
+    certificateName: '*.elliotdavies.co.uk'
+    basePath: ''
+    stage: prod
+    createRoute53Record: false
+    endpointType: 'regional'
+    securityPolicy: tls_1_2
+    apiType: http
+    autoDomain: true
+
   esbuild:
     bundle: true
     minify: false
     sourcemap: true
-    exclude:
-      - aws-sdk
     target: node20
     platform: node
     concurrency: 10

@@ -13,11 +13,19 @@ import multer from "multer";
 import { v4 as uuid } from "uuid";
 import crypto from "crypto-js";
 
-import aws from "aws-sdk";
-const s3 = new aws.S3();
-const dynamo = new aws.DynamoDB({
-  region: "eu-west-2",
-});
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  QueryCommand,
+  PutCommand,
+  GetCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
+
+const s3Client = new S3Client({ region: "eu-west-2" });
+const ddbClient = new DynamoDBClient({ region: "eu-west-2" });
+const dynamo = DynamoDBDocumentClient.from(ddbClient);
 
 const app = express();
 app.disable("x-powered-by");
@@ -47,12 +55,12 @@ interface Recipe {
 }
 
 interface DynamoRecipe {
-  id: { S: string };
-  url: { S: string };
-  title: { S: string };
-  notes: { S: string };
-  images?: { SS: string[] };
-  user_id: { S: string };
+  id: string;
+  url: string;
+  title: string;
+  notes: string;
+  images?: string[];
+  user_id: string;
 }
 
 app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
@@ -75,26 +83,26 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
      *
      * See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html
      */
-    const dynamoRes = await dynamo
-      .query({
+    const dynamoRes = await dynamo.send(
+      new QueryCommand({
         TableName: "recipes",
         IndexName: "RecipesByUser",
         KeyConditionExpression: "user_id = :u",
         ExpressionAttributeValues: {
-          ":u": { S: userId },
+          ":u": userId,
         },
       })
-      .promise();
+    );
 
-    const items = (dynamoRes.Items as unknown) as DynamoRecipe[];
+    const items = (dynamoRes.Items || []) as DynamoRecipe[];
 
     return res.json(
       items.map((item) => ({
-        id: item.id.S,
-        url: item.url.S,
-        title: item.title.S,
-        notes: item.notes.S,
-        images: item.images ? item.images.SS : [],
+        id: item.id,
+        url: item.url,
+        title: item.title,
+        notes: item.notes,
+        images: item.images || [],
       }))
     );
   } catch (error) {
@@ -134,19 +142,19 @@ app.post(
     const id = uuid();
 
     try {
-      await dynamo
-        .putItem({
+      await dynamo.send(
+        new PutCommand({
           TableName: "recipes",
           Item: {
-            id: { S: id },
-            url: { S: url },
-            title: { S: title },
-            notes: { S: notes },
-            ...(images.length ? { images: { SS: images } } : {}),
-            user_id: { S: userId },
+            id,
+            url,
+            title,
+            notes,
+            ...(images.length ? { images } : {}),
+            user_id: userId,
           },
         })
-        .promise();
+      );
 
       res.status(201).json({ id, url, title, notes, images });
     } catch (error) {
@@ -186,34 +194,34 @@ app.put(
     }
 
     try {
-      const { Item } = await dynamo
-        .getItem({
+      const { Item } = await dynamo.send(
+        new GetCommand({
           TableName: "recipes",
-          Key: { id: { S: id } },
+          Key: { id },
           ProjectionExpression: "user_id",
         })
-        .promise();
+      );
 
-      if (!Item || Item.user_id.S !== userId) {
+      if (!Item || Item.user_id !== userId) {
         return res.status(403).json({
           msg: "Not authorized to edit this recipe",
         });
       }
 
       // TODO Use an update operation rather than overwriting every time
-      await dynamo
-        .putItem({
+      await dynamo.send(
+        new PutCommand({
           TableName: "recipes",
           Item: {
-            id: { S: id },
-            url: { S: url },
-            title: { S: title },
-            notes: { S: notes },
-            ...(images.length ? { images: { SS: images } } : {}),
-            user_id: { S: userId },
+            id,
+            url,
+            title,
+            notes,
+            ...(images.length ? { images } : {}),
+            user_id: userId,
           },
         })
-        .promise();
+      );
 
       return res.sendStatus(204);
     } catch (error) {
@@ -254,26 +262,26 @@ app.delete(
     }
 
     try {
-      const { Item } = await dynamo
-        .getItem({
+      const { Item } = await dynamo.send(
+        new GetCommand({
           TableName: "recipes",
-          Key: { id: { S: id } },
+          Key: { id },
           ProjectionExpression: "user_id",
         })
-        .promise();
+      );
 
-      if (!Item || Item.user_id.S !== userId) {
+      if (!Item || Item.user_id !== userId) {
         return res.status(403).json({
           msg: "Not authorized to delete this recipe",
         });
       }
 
-      await dynamo
-        .deleteItem({
+      await dynamo.send(
+        new DeleteCommand({
           TableName: "recipes",
-          Key: { id: { S: id } },
+          Key: { id },
         })
-        .promise();
+      );
 
       return res.sendStatus(204);
     } catch (error) {
@@ -314,15 +322,15 @@ app.post(
     const ext = parts[parts.length - 1];
     const filename = `${uuid()}.${ext}`;
 
-    const params = {
-      Bucket: "recipes.elliotdavies.co.uk",
-      Key: `images/${filename}`,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-    };
-
     try {
-      await s3.upload(params).promise();
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: "recipes.elliotdavies.co.uk",
+          Key: `images/${filename}`,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+        })
+      );
       return res.json({ filename });
     } catch (error) {
       return res.status(500).json({
@@ -357,16 +365,16 @@ const getUserIdFromValidSession = async (
 
   let userId: string | undefined;
   try {
-    const { Item } = await dynamo
-      .getItem({
+    const { Item } = await dynamo.send(
+      new GetCommand({
         TableName: "recipes_sessions",
-        Key: { session_id: { S: sessionId } },
+        Key: { session_id: sessionId },
         ProjectionExpression: "user_id",
       })
-      .promise();
+    );
 
     if (Item) {
-      userId = Item.user_id.S;
+      userId = Item.user_id;
     }
   } catch (error) {
     throw new Error("Failed to query for session");
@@ -409,14 +417,12 @@ app.post(
 
     // Check if there's already an account for this email
     try {
-      const { Item } = await dynamo
-        .getItem({
+      const { Item } = await dynamo.send(
+        new GetCommand({
           TableName: "recipes_users_basic",
-          Key: {
-            email: { S: email },
-          },
+          Key: { email },
         })
-        .promise();
+      );
 
       if (Item) {
         return res.status(400).json({
@@ -435,26 +441,26 @@ app.post(
 
     const userId = uuid();
     try {
-      await dynamo
-        .putItem({
+      await dynamo.send(
+        new PutCommand({
           TableName: "recipes_users",
           Item: {
-            id: { S: userId },
-            name: { S: name },
+            id: userId,
+            name,
           },
         })
-        .promise();
+      );
 
-      await dynamo
-        .putItem({
+      await dynamo.send(
+        new PutCommand({
           TableName: "recipes_users_basic",
           Item: {
-            user_id: { S: userId },
-            email: { S: email },
-            password: { S: encodePassword(password) },
+            user_id: userId,
+            email,
+            password: encodePassword(password),
           },
         })
-        .promise();
+      );
     } catch (error) {
       return res.status(500).json({
         msg: "Failed to create user",
@@ -465,15 +471,15 @@ app.post(
     try {
       const sessionId = uuid();
 
-      await dynamo
-        .putItem({
+      await dynamo.send(
+        new PutCommand({
           TableName: "recipes_sessions",
           Item: {
-            user_id: { S: userId },
-            session_id: { S: sessionId },
+            user_id: userId,
+            session_id: sessionId,
           },
         })
-        .promise();
+      );
 
       res.status(200).json({ sessionId, name });
     } catch (error) {
@@ -510,12 +516,12 @@ app.post(
 
     let userRes;
     try {
-      const { Item } = await dynamo
-        .getItem({
+      const { Item } = await dynamo.send(
+        new GetCommand({
           TableName: "recipes_users_basic",
-          Key: { email: { S: email } },
+          Key: { email },
         })
-        .promise();
+      );
 
       userRes = Item;
     } catch (error) {
@@ -525,37 +531,37 @@ app.post(
       });
     }
 
-    if (!userRes || userRes.password.S !== encodePassword(password)) {
+    if (!userRes || userRes.password !== encodePassword(password)) {
       return res.status(401).json({
         msg: "Invalid email or password",
       });
     }
 
-    const userId = userRes.user_id.S;
+    const userId = userRes.user_id;
     try {
-      const { Item } = await dynamo
-        .getItem({
+      const { Item } = await dynamo.send(
+        new GetCommand({
           TableName: "recipes_users",
-          Key: { id: { S: userId } },
+          Key: { id: userId },
         })
-        .promise();
+      );
 
       if (!Item) {
         throw new Error("No user found for given ID");
       }
 
-      const name: string = Item.name.S || "";
+      const name: string = Item.name || "";
       const sessionId = uuid();
 
-      await dynamo
-        .putItem({
+      await dynamo.send(
+        new PutCommand({
           TableName: "recipes_sessions",
           Item: {
-            user_id: { S: userId },
-            session_id: { S: sessionId },
+            user_id: userId,
+            session_id: sessionId,
           },
         })
-        .promise();
+      );
 
       res.status(200).json({ sessionId, name });
     } catch (error) {
@@ -583,12 +589,12 @@ app.post("/sign-out", async (req: Request, res: Response) => {
       throw new Error("Missing session ID");
     }
 
-    await dynamo
-      .deleteItem({
+    await dynamo.send(
+      new DeleteCommand({
         TableName: "recipes_sessions",
-        Key: { session_id: { S: sessionId } },
+        Key: { session_id: sessionId },
       })
-      .promise();
+    );
 
     return res.sendStatus(200);
   } catch (error) {

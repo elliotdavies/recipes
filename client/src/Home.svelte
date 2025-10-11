@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Link } from 'svelte-routing';
+  import { link } from 'svelte-spa-router';
 
   import List from "./Home/List.svelte"
 </script>
@@ -7,5 +7,5 @@
 <style>
 </style>
 
-<Link to="/submit">Save new recipe</Link>
+<a href="/submit" use:link>Save new recipe</a>
 <List />

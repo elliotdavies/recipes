@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { navigate } from "svelte-routing";
+  import { push } from "svelte-spa-router";
 
   import { toFullUrl } from './utils';
   import { recipes, sessionId } from "./store";
@@ -7,7 +7,8 @@
 
   import Form from './Recipe/Form.svelte'
 
-  export let id: string;
+  export let params: { id: string } = { id: '' };
+  $: id = params.id;
 
   let state = {
     sessionId: null,
@@ -71,7 +72,7 @@
         state.request = {
           status: "success"
         };
-        navigate("/");
+        push("/");
       })
       .catch(error => {
         state.request = {
