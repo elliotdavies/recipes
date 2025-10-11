@@ -1,0 +1,43 @@
+name: Server Build and Deploy
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./serverless
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'yarn'
+          cache-dependency-path: serverless/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build serverless package
+        run: yarn build
+
+      - name: Configure AWS credentials
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Deploy with Serverless
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: yarn deploy

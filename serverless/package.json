@@ -4,6 +4,7 @@
   "main": "index.ts",
   "license": "MIT",
   "scripts": {
+    "build": "serverless package",
     "watch": "AWS_PROFILE=elliot-laptop serverless offline start",
     "deploy": "serverless deploy --verbose",
     "invoke-local": "serverless invoke local -f app",
