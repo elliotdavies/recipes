@@ -1,16 +1,24 @@
+import type { Recipe, AuthResponse, ImageUploadResponse } from './types';
+
 const apiUrl = __API_URL__;
 
-export const getRecipes = (session_id) =>
+export const getRecipes = (session_id: string): Promise<Recipe[]> =>
   fetch(apiUrl, {
     headers: {
       'Authorization': `Bearer ${session_id}`
     }
   }).then(res => {
-    if (res.status !== 200) throw new Error(res);
+    if (res.status !== 200) throw new Error(String(res));
     else return res.json();
   });
 
-export const submitRecipe = (session_id, url, title, notes, images) =>
+export const submitRecipe = (
+  session_id: string,
+  url: string,
+  title: string,
+  notes?: string,
+  images?: string[]
+): Promise<Recipe> =>
   fetch(apiUrl, {
     method: "POST",
     headers: {
@@ -19,11 +27,18 @@ export const submitRecipe = (session_id, url, title, notes, images) =>
     },
     body: JSON.stringify({ url, title, notes, images })
   }).then(res => {
-    if (res.status !== 201) throw new Error(res);
+    if (res.status !== 201) throw new Error(String(res));
     else return res.json();
   });
 
-export const updateRecipe = (session_id, id, url, title, notes, images) =>
+export const updateRecipe = (
+  session_id: string,
+  id: string,
+  url: string,
+  title: string,
+  notes?: string,
+  images?: string[]
+): Promise<Response> =>
   fetch(apiUrl, {
     method: "PUT",
     headers: {
@@ -32,11 +47,11 @@ export const updateRecipe = (session_id, id, url, title, notes, images) =>
     },
     body: JSON.stringify({ id, url, title, notes, images })
   }).then(res => {
-    if (res.status !== 204) throw new Error(res);
+    if (res.status !== 204) throw new Error(String(res));
     else return res;
   });
 
-export const deleteRecipe = (session_id, id) =>
+export const deleteRecipe = (session_id: string, id: string): Promise<Response> =>
   fetch(apiUrl, {
     method: "DELETE",
     headers: {
@@ -45,11 +60,11 @@ export const deleteRecipe = (session_id, id) =>
     },
     body: JSON.stringify({ id })
   }).then(res => {
-    if (res.status !== 204) throw new Error(res);
+    if (res.status !== 204) throw new Error(String(res));
     else return res;
   });
 
-export const postImage = (session_id, formData) =>
+export const postImage = (session_id: string, formData: FormData): Promise<string> =>
   fetch(`${apiUrl}/image`, {
     method: 'POST',
     headers: {
@@ -57,11 +72,11 @@ export const postImage = (session_id, formData) =>
     },
     body: formData
   }).then(res => {
-    if (res.status !== 200) throw new Error(res);
+    if (res.status !== 200) throw new Error(String(res));
     else return res.json();
-  }).then(json => json.filename);
+  }).then((json: ImageUploadResponse) => json.filename);
 
-export const signUp = (name, email, password) =>
+export const signUp = (name: string, email: string, password: string): Promise<AuthResponse> =>
   fetch(`${apiUrl}/sign-up`, {
     method: 'POST',
     headers: {
@@ -77,7 +92,7 @@ export const signUp = (name, email, password) =>
     else return res.json();
   });
 
-export const signIn = (email, password) =>
+export const signIn = (email: string, password: string): Promise<AuthResponse> =>
   fetch(`${apiUrl}/sign-in`, {
     method: 'POST',
     headers: {
@@ -93,7 +108,7 @@ export const signIn = (email, password) =>
     else return res.json();
   });
 
-export const signOut = (session_id) =>
+export const signOut = (session_id: string): Promise<void> =>
   fetch(`${apiUrl}/sign-out`, {
     method: 'POST',
     headers: {

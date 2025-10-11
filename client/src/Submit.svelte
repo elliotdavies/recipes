@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { link, navigate } from 'svelte-routing';
 
   import { submitRecipe } from "./api";

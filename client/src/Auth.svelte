@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { navigate } from 'svelte-routing'
   import * as store from './store'
   import * as api from './api';

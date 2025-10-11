@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { navigate } from "svelte-routing";
 
   import { toFullUrl } from './utils';
@@ -7,7 +7,7 @@
 
   import Form from './Recipe/Form.svelte'
 
-  export let id;
+  export let id: string;
 
   let state = {
     sessionId: null,
