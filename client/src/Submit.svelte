@@ -1,97 +1,91 @@
 <script lang="ts">
-  import { Link, navigate } from 'svelte-navigator';
+  import { Link, navigate } from "svelte-navigator";
 
   import { submitRecipe } from "./api";
   import { recipes, sessionId } from "./store";
-  import Form from './Recipe/Form.svelte'
+  import Form from "./Recipe/Form.svelte";
 
   let state = {
     sessionId: null,
     status: "notAsked",
-    recipe: undefined
+    recipe: undefined,
   };
 
-  sessionId.subscribe(id => {
+  sessionId.subscribe((id) => {
     state.sessionId = id;
   });
 
-  const onSave = recipe => {
+  const onSave = (recipe) => {
     submitRecipe(state.sessionId, recipe)
-      .then(recipe => {
+      .then((recipe) => {
         state = {
-          status: "success"
+          status: "success",
         };
-        recipes.update(rs => [...rs, recipe])
+        recipes.update((rs) => [...rs, recipe]);
       })
-      .catch(error => {
+      .catch((error) => {
         state = {
           status: "failure",
           error,
-          recipe
+          recipe,
         };
       });
   };
 
   const onCancel = () => {
-    navigate('/');
-  }
+    navigate("/");
+  };
 
   const reset = () => {
     state = {
       status: "notAsked",
-      recipe: undefined
-    }
+      recipe: undefined,
+    };
   };
 
   const retry = () => {
     state = {
       status: "notAsked",
-      recipe: state.recipe
-    }
+      recipe: state.recipe,
+    };
   };
 </script>
-
-<style>
-h2 {
-  font-weight: normal;
-  font-size: 20px;
-}
-
-button {
-  width: 100%;
-}
-
-a,
-button,
-span,
-code {
-  display: block;
-  margin-bottom: 15px;
-}
-</style>
 
 <section>
   <h2>Save new recipe</h2>
 
-  {#if state.status === 'notAsked'}
-
-    <Form recipe={state.recipe} onSave={onSave} onCancel={onCancel} />
-
-  {:else if state.status === 'success'}
-
+  {#if state.status === "notAsked"}
+    <Form recipe={state.recipe} {onSave} {onCancel} />
+  {:else if state.status === "success"}
     <div class="success">
       <span class="status">Saved successfully!</span>
       <button type="button" on:click={reset}>Save another</button>
       <Link to="/">Go home</Link>
     </div>
-
-  {:else if state.status === 'failure'}
-
+  {:else if state.status === "failure"}
     <div class="failure">
       <span class="status success">Failed to save :-(</span>
       <code>{state.error}</code>
       <button type="button" on:click={retry}>Try again</button>
     </div>
-
   {/if}
 </section>
+
+<style>
+  h2 {
+    font-weight: normal;
+    font-size: 20px;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  a,
+  button,
+  span,
+  code {
+    display: block;
+    margin-bottom: 15px;
+  }
+</style>

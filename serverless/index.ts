@@ -14,7 +14,10 @@ import { v4 as uuid } from "uuid";
 import crypto from "crypto-js";
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBClient, QueryCommand as RawQueryCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  QueryCommand as RawQueryCommand,
+} from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import {
   DynamoDBDocumentClient,
@@ -102,10 +105,10 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
         ExpressionAttributeValues: {
           ":u": { S: userId },
         },
-      })
+      }),
     );
 
-    const items = (dynamoRes.Items || []).map(rawItem => {
+    const items = (dynamoRes.Items || []).map((rawItem) => {
       const item = unmarshall(rawItem);
       // Handle both SDK v3 array format and legacy SDK v2 String Set format
       // SDK v2 stores as { SS: ["file1.jpg"] }, SDK v3 stores as ["file1.jpg"]
@@ -144,7 +147,7 @@ app.post(
   "/",
   async (
     req: RequestWithBody<CreateRecipeBody>,
-    res: ResponseWithErr<Recipe>
+    res: ResponseWithErr<Recipe>,
   ) => {
     const sessionId = extractSessionId(req);
     let userId;
@@ -178,7 +181,7 @@ app.post(
             ...(images.length ? { images } : {}),
             user_id: userId,
           },
-        })
+        }),
       );
 
       res.status(201).json({ id, url, title, notes, images });
@@ -188,7 +191,7 @@ app.post(
         error,
       });
     }
-  }
+  },
 );
 
 app.put(
@@ -224,7 +227,7 @@ app.put(
           TableName: "recipes",
           Key: { id },
           ProjectionExpression: "user_id",
-        })
+        }),
       );
 
       if (!Item || Item.user_id !== userId) {
@@ -245,7 +248,7 @@ app.put(
             ...(images.length ? { images } : {}),
             user_id: userId,
           },
-        })
+        }),
       );
 
       return res.sendStatus(204);
@@ -255,7 +258,7 @@ app.put(
         error,
       });
     }
-  }
+  },
 );
 
 interface DeleteRecipeBody {
@@ -266,7 +269,7 @@ app.delete(
   "/",
   async (
     req: RequestWithBody<DeleteRecipeBody>,
-    res: ResponseWithErr<void>
+    res: ResponseWithErr<void>,
   ) => {
     const sessionId = extractSessionId(req);
     let userId;
@@ -292,7 +295,7 @@ app.delete(
           TableName: "recipes",
           Key: { id },
           ProjectionExpression: "user_id",
-        })
+        }),
       );
 
       if (!Item || Item.user_id !== userId) {
@@ -305,7 +308,7 @@ app.delete(
         new DeleteCommand({
           TableName: "recipes",
           Key: { id },
-        })
+        }),
       );
 
       return res.sendStatus(204);
@@ -315,7 +318,7 @@ app.delete(
         error,
       });
     }
-  }
+  },
 );
 
 interface ImageUploadResponse {
@@ -355,7 +358,7 @@ app.post(
           Body: req.file.buffer,
           ContentType: req.file.mimetype,
           ACL: "public-read",
-        })
+        }),
       );
       return res.json({ filename });
     } catch (error) {
@@ -364,7 +367,7 @@ app.post(
         error,
       });
     }
-  }
+  },
 );
 
 /**
@@ -383,7 +386,7 @@ const extractSessionId = (req: Request): string | null => {
 };
 
 const getUserIdFromValidSession = async (
-  sessionId: string | null
+  sessionId: string | null,
 ): Promise<string> => {
   if (!sessionId) {
     throw new Error("Null sessionId");
@@ -396,7 +399,7 @@ const getUserIdFromValidSession = async (
         TableName: "recipes_sessions",
         Key: { session_id: sessionId },
         ProjectionExpression: "user_id",
-      })
+      }),
     );
 
     if (Item) {
@@ -432,7 +435,7 @@ app.post(
   "/sign-up",
   async (
     req: RequestWithBody<SignUpBody>,
-    res: ResponseWithErr<SignUpResponse>
+    res: ResponseWithErr<SignUpResponse>,
   ) => {
     const { name, email, password } = req.body;
     if (isVoid(name) || isVoid(email) || isVoid(password)) {
@@ -447,7 +450,7 @@ app.post(
         new GetCommand({
           TableName: "recipes_users_basic",
           Key: { email },
-        })
+        }),
       );
 
       if (Item) {
@@ -474,7 +477,7 @@ app.post(
             id: userId,
             name,
           },
-        })
+        }),
       );
 
       await dynamo.send(
@@ -485,7 +488,7 @@ app.post(
             email,
             password: encodePassword(password),
           },
-        })
+        }),
       );
     } catch (error) {
       return res.status(500).json({
@@ -504,7 +507,7 @@ app.post(
             user_id: userId,
             session_id: sessionId,
           },
-        })
+        }),
       );
 
       res.status(200).json({ sessionId, name });
@@ -514,7 +517,7 @@ app.post(
         error,
       });
     }
-  }
+  },
 );
 
 interface SignInBody {
@@ -531,7 +534,7 @@ app.post(
   "/sign-in",
   async (
     req: RequestWithBody<SignInBody>,
-    res: ResponseWithErr<SignInResponse>
+    res: ResponseWithErr<SignInResponse>,
   ) => {
     const { email, password } = req.body;
     if (isVoid(email) || isVoid(password)) {
@@ -546,7 +549,7 @@ app.post(
         new GetCommand({
           TableName: "recipes_users_basic",
           Key: { email },
-        })
+        }),
       );
 
       userRes = Item;
@@ -569,7 +572,7 @@ app.post(
         new GetCommand({
           TableName: "recipes_users",
           Key: { id: userId },
-        })
+        }),
       );
 
       if (!Item) {
@@ -586,7 +589,7 @@ app.post(
             user_id: userId,
             session_id: sessionId,
           },
-        })
+        }),
       );
 
       res.status(200).json({ sessionId, name });
@@ -596,7 +599,7 @@ app.post(
         error,
       });
     }
-  }
+  },
 );
 
 app.post("/sign-out", async (req: Request, res: Response) => {
@@ -619,7 +622,7 @@ app.post("/sign-out", async (req: Request, res: Response) => {
       new DeleteCommand({
         TableName: "recipes_sessions",
         Key: { session_id: sessionId },
-      })
+      }),
     );
 
     return res.sendStatus(200);

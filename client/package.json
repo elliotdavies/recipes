@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{ts,svelte,js,css}\""
   },
   "dependencies": {
     "svelte-navigator": "^3.2.2"
@@ -14,6 +15,8 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.4",
     "@tsconfig/svelte": "^5.0.4",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
     "svelte": "^5.18.2",
     "typescript": "^5.7.3",
     "vite": "^6.0.11"
