@@ -1,14 +1,14 @@
 <script lang="ts">
-  import type { Recipe } from '../types'
-  import { postImage } from '../api'
-  import { sessionId } from '../store'
+  import type { Recipe } from "../types";
+  import { postImage } from "../api";
+  import { sessionId } from "../store";
 
   export let recipe: Partial<Recipe> = {
     url: "",
     title: "",
     notes: "",
     images: [],
-  }
+  };
 
   export let onSave: (recipe: Partial<Recipe>) => void;
   export let onCancel: () => void;
@@ -18,45 +18,45 @@
     recipe,
     selectedImage: null,
     imageRequest: {
-      status: "notAsked"
-    }
-  }
+      status: "notAsked",
+    },
+  };
 
-  sessionId.subscribe(id => {
-   state.sessionId = id;
-  })
+  sessionId.subscribe((id) => {
+    state.sessionId = id;
+  });
 
-  const imageInputOnChange = e => {
+  const imageInputOnChange = (e) => {
     e.preventDefault();
 
     if (e.target.files && e.target.files.length > 0) {
-      state.selectedImage = e.target.files[0]
+      state.selectedImage = e.target.files[0];
     }
-  }
+  };
 
-  const onUploadImage = e => {
+  const onUploadImage = (e) => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append('image', state.selectedImage);
+    formData.append("image", state.selectedImage);
 
     postImage(state.sessionId, formData)
-      .then(filename => {
+      .then((filename) => {
         state.recipe.images.push(filename);
         state.imageRequest = {
-          status: 'success'
-        }
-        state.selectedImage = null
+          status: "success",
+        };
+        state.selectedImage = null;
       })
-      .catch(error => {
+      .catch((error) => {
         state.imageRequest = {
-          status: 'failure',
-          error
-        }
-      })
-  }
+          status: "failure",
+          error,
+        };
+      });
+  };
 
-  const onSubmit = e => {
+  const onSubmit = (e) => {
     e.preventDefault();
 
     const { title } = state.recipe;
@@ -64,52 +64,14 @@
 
     const { selectedImage } = state;
     if (selectedImage !== null) {
-      console.log('Image selected but not uploaded');
+      console.log("Image selected but not uploaded");
       console.log(selectedImage);
       return;
     }
 
     onSave(state.recipe);
-  }
+  };
 </script>
-
-<style>
-button, input, label, textarea, fieldset {
-  width: 100%;
-  margin: 0;
-}
-
-label {
-  display: block;
-  margin-bottom: 10px;
-}
-
-label span {
-  display: block;
-  margin-right: 5px;
-  margin-bottom: 5px;
-}
-
-button {
-  margin-bottom: 10px;
-}
-button:disabled {
-  color: grey;
-}
-
-fieldset {
-  padding: 0;
-  border: 0;
-}
-
-.images {
-  margin: 0;
-}
-.images small {
-  display: block;
-  margin-bottom: 5px;
-}
-</style>
 
 <form on:submit={onSubmit}>
   <label>
@@ -126,13 +88,13 @@ fieldset {
     <span>Images</span>
 
     <ul class="images">
-    {#each state.recipe.images as filename}
-      <li class="image">
-        <span>{filename}</span>
-      </li>
-    {:else}
-      <small>No images yet...</small>
-    {/each}
+      {#each state.recipe.images as filename}
+        <li class="image">
+          <span>{filename}</span>
+        </li>
+      {:else}
+        <small>No images yet...</small>
+      {/each}
     </ul>
 
     <label>
@@ -164,3 +126,45 @@ fieldset {
   <button>Save</button>
   <button type="button" on:click={onCancel}>Cancel</button>
 </form>
+
+<style>
+  button,
+  input,
+  label,
+  textarea,
+  fieldset {
+    width: 100%;
+    margin: 0;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  label span {
+    display: block;
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+
+  button {
+    margin-bottom: 10px;
+  }
+  button:disabled {
+    color: grey;
+  }
+
+  fieldset {
+    padding: 0;
+    border: 0;
+  }
+
+  .images {
+    margin: 0;
+  }
+  .images small {
+    display: block;
+    margin-bottom: 5px;
+  }
+</style>

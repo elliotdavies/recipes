@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Router, Route } from 'svelte-navigator';
+  import { Router, Route } from "svelte-navigator";
 
   import { getRecipes } from "./api";
   import { getSessionId } from "./utils";
@@ -11,22 +11,21 @@
   import Submit from "./Submit.svelte";
   import Auth from "./Auth.svelte";
 
-  const session_id = getSessionId()
+  const session_id = getSessionId();
   sessionId.set(session_id);
 
   if (session_id) {
-    getRecipes(session_id)
-      .then(rs => {
-        recipes.set(rs);
-      });
+    getRecipes(session_id).then((rs) => {
+      recipes.set(rs);
+    });
   }
 </script>
 
-<style>
-</style>
-
 <svelte:head>
-  <link href="https://fonts.googleapis.com/css?family=Shadows+Into+Light&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css?family=Shadows+Into+Light&display=swap"
+    rel="stylesheet"
+  />
 </svelte:head>
 
 <Router>
@@ -40,3 +39,6 @@
     </Route>
   </main>
 </Router>
+
+<style>
+</style>
