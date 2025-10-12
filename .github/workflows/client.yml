@@ -58,4 +58,4 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync dist s3://recipes.elliotdavies.co.uk --delete
+          aws s3 sync dist s3://recipes.elliotdavies.co.uk --delete --exclude "images/*"
