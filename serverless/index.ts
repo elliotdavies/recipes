@@ -97,13 +97,26 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
     const items = (dynamoRes.Items || []) as DynamoRecipe[];
 
     return res.json(
-      items.map((item) => ({
-        id: item.id,
-        url: item.url,
-        title: item.title,
-        notes: item.notes,
-        images: item.images || [],
-      }))
+      items.map((item) => {
+        // Handle both SDK v3 array format and legacy SDK v2 String Set format
+        let images: string[] = [];
+        if (item.images) {
+          // Check if it's the old SDK v2 format with SS (String Set)
+          if (typeof item.images === 'object' && 'SS' in item.images) {
+            images = (item.images as any).SS;
+          } else if (Array.isArray(item.images)) {
+            images = item.images;
+          }
+        }
+
+        return {
+          id: item.id,
+          url: item.url,
+          title: item.title,
+          notes: item.notes,
+          images,
+        };
+      })
     );
   } catch (error) {
     return res.status(500).json({
