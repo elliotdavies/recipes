@@ -8,7 +8,7 @@
     "watch": "AWS_PROFILE=elliot-laptop serverless offline start",
     "deploy": "serverless deploy --verbose",
     "invoke-local": "serverless invoke local -f app",
-    "format": "prettier --write index.ts"
+    "format": "prettier --write \"*.ts\""
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.908.0",
