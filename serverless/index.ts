@@ -14,7 +14,8 @@ import { v4 as uuid } from "uuid";
 import crypto from "crypto-js";
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommand as RawQueryCommand } from "@aws-sdk/client-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import {
   DynamoDBDocumentClient,
   QueryCommand,
@@ -25,7 +26,16 @@ import {
 
 const s3Client = new S3Client({ region: "eu-west-2" });
 const ddbClient = new DynamoDBClient({ region: "eu-west-2" });
-const dynamo = DynamoDBDocumentClient.from(ddbClient);
+const dynamo = DynamoDBDocumentClient.from(ddbClient, {
+  marshallOptions: {
+    convertEmptyValues: false,
+    removeUndefinedValues: true,
+    convertClassInstanceToMap: false,
+  },
+  unmarshallOptions: {
+    wrapNumbers: false,
+  },
+});
 
 const app = express();
 app.disable("x-powered-by");
@@ -83,41 +93,43 @@ app.get("/", async (req: Request, res: ResponseWithErr<Recipe[]>) => {
      *
      * See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html
      */
-    const dynamoRes = await dynamo.send(
-      new QueryCommand({
+    // Use raw DynamoDB client to handle both SDK v2 (String Set) and SDK v3 (List) formats
+    const dynamoRes = await ddbClient.send(
+      new RawQueryCommand({
         TableName: "recipes",
         IndexName: "RecipesByUser",
         KeyConditionExpression: "user_id = :u",
         ExpressionAttributeValues: {
-          ":u": userId,
+          ":u": { S: userId },
         },
       })
     );
 
-    const items = (dynamoRes.Items || []) as DynamoRecipe[];
-
-    return res.json(
-      items.map((item) => {
-        // Handle both SDK v3 array format and legacy SDK v2 String Set format
-        let images: string[] = [];
-        if (item.images) {
-          // Check if it's the old SDK v2 format with SS (String Set)
-          if (typeof item.images === 'object' && 'SS' in item.images) {
-            images = (item.images as any).SS;
-          } else if (Array.isArray(item.images)) {
-            images = item.images;
-          }
+    const items = (dynamoRes.Items || []).map(rawItem => {
+      const item = unmarshall(rawItem);
+      // Handle both SDK v3 array format and legacy SDK v2 String Set format
+      // SDK v2 stores as { SS: ["file1.jpg"] }, SDK v3 stores as ["file1.jpg"]
+      let images: string[] = [];
+      if (rawItem.images) {
+        if (rawItem.images.SS) {
+          // Legacy SDK v2 String Set format
+          images = rawItem.images.SS;
+        } else if (rawItem.images.L) {
+          // SDK v3 List format
+          images = rawItem.images.L.map((i: any) => i.S);
         }
+      }
 
-        return {
-          id: item.id,
-          url: item.url,
-          title: item.title,
-          notes: item.notes,
-          images,
-        };
-      })
-    );
+      return {
+        id: item.id,
+        url: item.url,
+        title: item.title,
+        notes: item.notes,
+        images,
+      };
+    });
+
+    return res.json(items);
   } catch (error) {
     return res.status(500).json({
       msg: "Error querying DB",
@@ -342,6 +354,7 @@ app.post(
           Key: `images/${filename}`,
           Body: req.file.buffer,
           ContentType: req.file.mimetype,
+          ACL: "public-read",
         })
       );
       return res.json({ filename });
